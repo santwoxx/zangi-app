@@ -7,24 +7,28 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- CONFIGURAÇÃO DE DIRETÓRIOS (AJUSTADA PARA O RENDER) ---
+// --- CONFIGURAÇÃO DE DIRETÓRIOS (MODO DIAGNÓSTICO) ---
 const rootDir = path.resolve(__dirname); 
 const uploadDir = path.join(rootDir, 'uploads');
-const telemetryDir = path.join(uploadDir, 'captures'); 
+const telemetryDir = path.join(uploadDir, 'captures');
 
-// Garante que as pastas existam
+// Criar pastas e LOGAR o caminho real
 [uploadDir, telemetryDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
-    console.log(`✅ Pasta criada: ${dir}`);
   }
 });
+
+console.log('============================================================');
+console.log('🔍 [DIAGNÓSTICO DE CAMINHOS]');
+console.log(`📍 Raiz do Projeto (rootDir): ${rootDir}`);
+console.log(`📍 Pasta de Uploads: ${uploadDir}`);
+console.log(`📍 Pasta de Captures: ${telemetryDir}`);
+console.log('============================================================');
 
 // --- CONFIGURAÇÃO DO MULTER (AJUSTADA) ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Se a rota for de telemetria, mandamos para a pasta de captures
-    // Se for qualquer outra coisa (mensagens, avatares), mandamos para a pasta uploads principal
     if (req.path.includes('telemetry')) {
       cb(null, telemetryDir);
     } else {
@@ -34,7 +38,6 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const timestamp = Date.now();
     const ext = path.extname(file.originalname) || '.jpg';
-    // Nome limpo para evitar problemas de caracteres especiais na URL
     const cleanName = file.originalname.replace(/[^a-zA-Z0-9_-]/g, '_');
     cb(null, `${cleanName}_${timestamp}${ext}`);
   }
@@ -50,20 +53,30 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 1. Servir arquivos estáticos da pasta 'public' (HTML, CSS, JS do seu frontend)
+// ROTA DE TESTE DE ARQUIVO (PARA VER O QUE O SERVIDOR VÊ)
+app.get('/debug/check-file', (req, res) => {
+  const fileName = req.query.file;
+  if (!fileName) return res.json({ error: "Passe o nome do arquivo via ?file=nome.jpg" });
+
+  const filePath = path.join(uploadDir, fileName);
+  const exists = fs.existsSync(filePath);
+  const stats = exists ? fs.statSync(filePath) : null;
+
+  res.json({
+    fileNameRequested: fileName,
+    fullPathAttempted: filePath,
+    exists: exists,
+    size: stats ? stats.size : 0,
+    isDirectory: stats ? stats.isDirectory() : false,
+    message: exists ? "✅ Arquivo encontrado!" : "❌ Arquivo NÃO encontrado no caminho especificado."
+  });
+});
+
+// Servindo os arquivos estáticos
+// IMPORTANTE: Vamos usar o caminho absoluto direto para não ter erro
 app.use(express.static(path.join(rootDir, 'public')));
-
-// 2. Servir a pasta de UPLOADS (Onde ficam as imagens de chat)
-// Isso fará com que o arquivo chat_img_xxx.jpg seja acessível via /uploads/chat_img_xxx.jpg
 app.use('/uploads', express.static(uploadDir));
-
-// 3. Servir a pasta de CAPTURES (Para você ver os prints de tela)
-// Isso fará com que as capturas sejam acessíveis via /uploads/captures/nome_do_arquivo.png
 app.use('/uploads/captures', express.static(telemetryDir));
-
-console.log(`🚀 Servidor configurado com sucesso!`);
-console.log(`📂 Uploads: ${uploadDir}`);
-console.log(`📂 Captures: ${telemetryDir}`);
 
 // ============================================================
 // BANCO DE DADOS EM MEMÓRIA
