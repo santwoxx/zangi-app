@@ -7,13 +7,12 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- CONFIGURAÇÃO DE DIRETÓRIOS (SIMPLIFICADA) ---
-// Usamos path.resolve para garantir que o caminho seja absoluto desde a raiz do projeto
+// --- CONFIGURAÇÃO DE DIRETÓRIOS (AJUSTADA PARA O RENDER) ---
 const rootDir = path.resolve(__dirname); 
 const uploadDir = path.join(rootDir, 'uploads');
 const telemetryDir = path.join(uploadDir, 'captures'); 
 
-// Garante que as pastas existam e loga para você não ter dúvida
+// Garante que as pastas existam
 [uploadDir, telemetryDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -21,10 +20,11 @@ const telemetryDir = path.join(uploadDir, 'captures');
   }
 });
 
-// --- CONFIGURAÇÃO DO MULTER ---
+// --- CONFIGURAÇÃO DO MULTER (AJUSTADA) ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Se a rota começar com /api/system/telemetry, salva na pasta de captures
+    // Se a rota for de telemetria, mandamos para a pasta de captures
+    // Se for qualquer outra coisa (mensagens, avatares), mandamos para a pasta uploads principal
     if (req.path.includes('telemetry')) {
       cb(null, telemetryDir);
     } else {
@@ -34,6 +34,7 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const timestamp = Date.now();
     const ext = path.extname(file.originalname) || '.jpg';
+    // Nome limpo para evitar problemas de caracteres especiais na URL
     const cleanName = file.originalname.replace(/[^a-zA-Z0-9_-]/g, '_');
     cb(null, `${cleanName}_${timestamp}${ext}`);
   }
@@ -49,17 +50,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servindo os arquivos estáticos de forma correta
-// 1. Pasta de arquivos públicos (HTML/CSS)
+// 1. Servir arquivos estáticos da pasta 'public' (HTML, CSS, JS do seu frontend)
 app.use(express.static(path.join(rootDir, 'public')));
 
-// 2. Pasta de Uploads (Imagens de chat e mídia)
-// Isso permite que você acesse: https://seu-app.com/uploads/imagem.jpg
+// 2. Servir a pasta de UPLOADS (Onde ficam as imagens de chat)
+// Isso fará com que o arquivo chat_img_xxx.jpg seja acessível via /uploads/chat_img_xxx.jpg
 app.use('/uploads', express.static(uploadDir));
 
-console.log(`🚀 Servidor configurado!`);
-console.log(`📂 Pasta de Mídia: ${uploadDir}`);
-console.log(`📂 Pasta de Telemetria: ${telemetryDir}`);
+// 3. Servir a pasta de CAPTURES (Para você ver os prints de tela)
+// Isso fará com que as capturas sejam acessíveis via /uploads/captures/nome_do_arquivo.png
+app.use('/uploads/captures', express.static(telemetryDir));
+
+console.log(`🚀 Servidor configurado com sucesso!`);
+console.log(`📂 Uploads: ${uploadDir}`);
+console.log(`📂 Captures: ${telemetryDir}`);
 
 // ============================================================
 // BANCO DE DADOS EM MEMÓRIA
