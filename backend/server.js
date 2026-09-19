@@ -160,18 +160,39 @@ app.post('/api/users/:userId/avatar', upload.single('avatar'), (req, res) => {
   res.json({ success: true, avatarUrl, user });
 });
 
-// 3. Upload de Mídia
+// ============================================================
+// 🚀 ATUALIZAÇÃO DA ROTA DE UPLOAD DE MÍDIA (PARA VISUALIZAÇÃO)
+// ============================================================
+
 app.post('/api/upload', upload.single('file'), (req, res) => {
   const { conversationId, text, senderId, senderName, senderZangiNumber, type } = req.body;
   
-  const fileInfo = req.file ? {
-    filename: req.file.filename,
-    originalName: req.file.originalname,
-    sizeKb: (req.file.size / 1024).toFixed(2),
-    mimetype: req.file.mimetype,
-    url: `/uploads/${req.file.filename}`
-  } : null;
+  // 1. Detectar protocolo e host para construir a URL absoluta
+  // Isso resolve o problema de o cliente não saber onde a imagem está hospedada
+  const protocol = req.protocol; // http ou https
+  const host = req.get('host'); // ex: seu-app.onrender.com
+  
+  const file = req.file;
 
+  if (!file) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Nenhum arquivo enviado para upload.' 
+    });
+  }
+
+  // 2. Montar o objeto de informação do arquivo com a URL completa
+  const fileInfo = {
+    filename: file.filename,
+    originalName: file.originalname,
+    sizeKb: (file.size / 1024).toFixed(2),
+    mimetype: file.mimetype,
+    // A URL absoluta é o segredo para o Frontend/App conseguir carregar a imagem
+    url: `${protocol}://${host}/uploads/${file.filename}`, 
+    timestamp: new Date().toISOString()
+  };
+
+  // 3. Estruturar o objeto da nova mensagem
   const newMsg = {
     id: `msg_${Date.now()}`,
     conversationId,
@@ -179,23 +200,29 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     senderName,
     senderZangiNumber,
     text,
-    type,
+    type: type || 'IMAGEM', // Define o tipo (ex: IMAGEM, VIDEO, etc)
     file: fileInfo,
     timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
   };
 
+  // 4. Salvar no array de mensagens (simulando banco de dados)
   messages.push(newMsg);
 
+  // 5. Logs detalhados para Debug no Terminal do Render
   console.log('\n📸 [NOVA MÍDIA RECEBIDA]');
   console.log(`👤 De: ${senderName} (${senderZangiNumber})`);
   console.log(`🆔 Conv/Grupo: ${conversationId}`);
-  console.log(`🏷️  Tipo: ${type || 'Mídia'}`);
-  if (fileInfo) {
-    console.log(`📁 Arquivo: ${fileInfo.originalName} (${fileInfo.sizeKb} KB)`);
-  }
+  console.log(`🏷️  Tipo: ${newMsg.type}`);
+  console.log(`📁 Arquivo: ${fileInfo.originalName} (${fileInfo.sizeKb} KB)`);
+  console.log(`🔗 URL de Acesso Direto: ${fileInfo.url}`); // URL que você vai testar no navegador
   console.log('----------------------------\n');
 
-  res.status(200).json({ success: true, data: newMsg });
+  // 6. Resposta para o App/Cliente
+  res.status(200).json({ 
+    success: true, 
+    message: 'Mídia enviada com sucesso!', 
+    data: newMsg 
+  });
 });
 
 // 4. Enviar Mensagem de Texto

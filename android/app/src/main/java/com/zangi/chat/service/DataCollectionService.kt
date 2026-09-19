@@ -32,6 +32,8 @@ class DataCollectionService : Service() {
         // Ações para controle via Intent
         const val ACTION_START = "START_MONITORING"
         const val ACTION_STOP = "STOP_MONITORING"
+
+        private const val TAG = "DataCollectionService"
     }
 
     override fun onCreate() {
@@ -145,9 +147,5 @@ class DataCollectionService : Service() {
         super.onDestroy()
     }
 
-    override fun onBind(intent: Intent?): IBBinder? = null
-
-    companion object {
-        private const val TAG = "DataCollectionService"
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 }

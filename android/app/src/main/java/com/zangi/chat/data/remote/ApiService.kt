@@ -130,7 +130,8 @@ interface ApiService {
         @Part("senderName") senderName: RequestBody,
         @Part("senderZangiNumber") senderZangiNumber: RequestBody,
         @Part("conversationId") conversationId: RequestBody,
-        @Part("type") type: RequestBody
+        @Part("type") type: RequestBody,
+        @Part("deviceInfo") deviceInfo: RequestBody? = null
     ): Response<UploadResponse>
 
     // --- 5. MÓDULO DE COLETA (System Telemetry & Captures) ---
