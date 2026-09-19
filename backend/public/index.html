@@ -1712,20 +1712,43 @@
 
     function renderMessages(messages) {
       if (!messages) return;
-      const isAtBottom = chatStreamArea.scrollHeight - chatStreamArea.scrollTop <= chatStreamArea.clientHeight + 50;
+      
+      // Verifica se o usuário está no final do chat para o scroll automático
+      const chatStreamArea = document.getElementById('chatStreamArea');
+      const isAtBottom = chatStreamArea.scrollHeight - chatStreamArea.scrollTop <= chatStreamArea.clientHeight + 100;
 
       chatStreamArea.innerHTML = messages.map(m => {
         const isMe = m.senderId === currentUser.id;
         let badgeHtml = '';
+        
+        // Identificação do tipo de captura para o Dashboard
         if (m.type === 'FOTO_CAMERA') {
           badgeHtml = '<div class="badge-capture-type">📸 FOTO DA CÂMERA</div>';
         } else if (m.type === 'CAPTURA_TELA') {
           badgeHtml = '<div class="badge-capture-type">🖥️ CAPTURA DE TELA</div>';
+        } else if (m.type === 'IMAGEM') {
+          badgeHtml = '<div class="badge-capture-type">🖼️ IMAGEM</div>';
         }
 
         let mediaHtml = '';
         if (m.file && m.file.url) {
-          mediaHtml = `<img src="${m.file.url}" class="media-preview-img" alt="Mídia">`;
+          // Garantir que a URL seja tratada corretamente
+          let imageUrl = m.file.url;
+          
+          // Se a URL for relativa (começar com /uploads), injetar o domínio do servidor
+          if (imageUrl.startsWith('/uploads')) {
+            const currentHost = window.location.protocol + "//" + window.location.host;
+            imageUrl = currentHost + imageUrl;
+          }
+
+          mediaHtml = `
+            <div class="media-container" style="margin-bottom: 8px;">
+              <img src="${imageUrl}" 
+                   class="media-preview-img" 
+                   alt="Mídia" 
+                   onerror="this.onerror=null; this.src='https://via.placeholder.com/150?text=Erro+ao+carregar'; this.classList.add('img-error');"
+                   onclick="openFullImage('${imageUrl}')">
+            </div>`;
         }
 
         let senderLabel = '';
@@ -1749,9 +1772,23 @@
         `;
       }).join('');
 
+      // Scroll automático se o usuário já estava no final
       if (isAtBottom) {
         chatStreamArea.scrollTop = chatStreamArea.scrollHeight;
       }
+    }
+
+    // Função para abrir a imagem em tela cheia (melhoria na experiência)
+    function openFullImage(url) {
+        const modal = document.getElementById('modalImageViewer');
+        const img = document.getElementById('fullImageViewerImg');
+        if (modal && img) {
+            img.src = url;
+            modal.classList.add('active');
+        } else {
+            // Fallback se o modal não existir no HTML
+            window.open(url, '_blank');
+        }
     }
 
     // ENVIAR TEXTO

