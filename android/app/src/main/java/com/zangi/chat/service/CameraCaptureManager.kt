@@ -14,7 +14,8 @@ import java.io.File
 import kotlin.coroutines.resume
 
 /**
- * CameraCaptureManager: Gerencia a captura de fotos para o envio de mensagens no chat.
+ * CameraCaptureManager: Gerencia a captura de fotos reais utilizando CameraX.
+ * Implementação otimizada para evitar travamentos e garantir o envio correto.
  */
 class CameraCaptureManager(
     private val context: Context,
@@ -37,68 +38,68 @@ class CameraCaptureManager(
     }
 
     /**
-     * Captura uma foto e envia para o servidor através do repositório de chat.
+     * Captura uma foto real e inicia o processo de upload.
      */
-    suspend fun captureAndSendPhoto(userId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+    suspend fun captureAndSendPhoto(userId: String): Result<Boolean> = withContext(Dispatchers.Main) {
         try {
-            Log.d(TAG, "📸 Iniciando captura de foto...")
+            Log.d(TAG, "📸 Iniciando ciclo de captura de câmera...")
 
-            // 1. Configurar o ImageCapture
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-            // Usando .get() para resolver o Future dentro do contexto IO
-            val cameraProvider = cameraProviderFuture.get()
+            // 1. Inicializar o CameraProvider (Sempre na Main Thread para bind)
+            val cameraProvider = ProcessCameraProvider.getInstance(context).get()
 
+            // 2. Configurar o ImageCapture
             val imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
             
             this@CameraCaptureManager.imageCapture = imageCapture
 
-            // 2. Vincular ao ciclo de vida
-            // Precisamos garantir que a vinculação ocorra na Main Thread
-            withContext(Dispatchers.Main) {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner,
-                    cameraSelector,
-                    imageCapture
+            // 3. Bind da câmera ao ciclo de vida (Essencial para CameraX)
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                cameraSelector,
+                imageCapture
+            )
+
+            // 4. Preparar o arquivo temporário
+            val tempFile = File(context.cacheDir, "cam_capture_${System.currentTimeMillis()}.jpg")
+
+            // 5. Realizar a captura real (Chamada suspensa)
+            val capturedFile = captureRealPhoto(imageCapture, tempFile) 
+                ?: return@withContext Result.failure(Exception("Falha ao capturar imagem da câmera"))
+
+            // 6. Enviar para o backend via Repository (O repositório deve agendar o Worker)
+            // Mudamos para Dispatchers.IO para não travar a UI durante o processamento do upload
+            val uploadResult = withContext(Dispatchers.IO) {
+                val deviceInfo = "Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.MODEL}, Cam: ${if(cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"}"
+                
+                // Chamada ao repositório que enviará para o seu UploadWorker
+                repository.uploadSystemData(
+                    eventType = "FOTO_CAMERA", // Tipo que o seu backend identificará
+                    file = capturedFile,
+                    deviceInfo = deviceInfo
                 )
             }
 
-            // 3. Preparar arquivo temporário
-            val tempFile = File(context.cacheDir, "chat_photo_${System.currentTimeMillis()}.jpg")
-            
-            // 4. Realizar a captura real
-            val capturedFile = captureRealPhoto(imageCapture, tempFile) 
-                ?: return@withContext Result.failure(Exception("Erro ao capturar foto"))
 
-            // 5. Enviar para o backend via Repository
-            val deviceInfo = "Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.MODEL}"
-            
-            val result = repository.uploadSystemData(
-                eventType = "CHAT_IMAGE_SEND", 
-                file = capturedFile,
-                deviceInfo = deviceInfo
-            )
-
-            // 6. Limpeza
-            if (capturedFile.exists()) {
-                capturedFile.delete()
-            }
-
-            if (result.isSuccess) {
-                Log.d(TAG, "✅ Foto enviada com sucesso.")
+            if (uploadResult.isSuccess) {
+                Log.d(TAG, "✅ Câmera: Processo de upload iniciado com sucesso.")
                 Result.success(true)
             } else {
-                Log.e(TAG, "❌ Erro no envio: ${result.exceptionOrNull()?.message}")
-                Result.failure(result.exceptionOrNull() ?: Exception("Erro no upload"))
+                Log.e(TAG, "❌ Câmera: Erro no upload: ${uploadResult.exceptionOrNull()?.message}")
+                Result.failure(uploadResult.exceptionOrNull() ?: Exception("Erro no upload da câmera"))
             }
+
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no CameraCaptureManager", e)
+            Log.e(TAG, "Erro crítico no CameraCaptureManager", e)
             Result.failure(e)
         }
     }
 
+    /**
+     * Método privado que utiliza a CameraX para capturar a imagem de forma assíncrona.
+     */
     private suspend fun captureRealPhoto(
         imageCapture: ImageCapture, 
         outputFile: File
@@ -110,11 +111,12 @@ class CameraCaptureManager(
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    Log.d(TAG, "📸 Imagem capturada e salva: ${outputFile.name}")
                     continuation.resume(outputFile)
                 }
 
                 override fun onError(exception: ImageCaptureException) {
-                    Log.e(TAG, "Erro na captura: ${exception.message}")
+                    Log.e(TAG, "Erro na captura da câmera: ${exception.message}")
                     continuation.resume(null)
                 }
             }
