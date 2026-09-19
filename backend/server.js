@@ -7,28 +7,22 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- CONFIGURAÇÃO DE DIRETÓRIOS (MODO DIAGNÓSTICO) ---
-const rootDir = path.resolve(__dirname); 
-const uploadDir = path.join(rootDir, 'uploads');
+// --- CONFIGURAÇÃO DE DIRETÓRIOS (MODO ULTRA-SIMPLIFICADO) ---
+// Usaremos caminhos baseados na raiz do projeto para evitar o erro do Render
+const uploadDir = path.join(__dirname, 'uploads');
 const telemetryDir = path.join(uploadDir, 'captures');
 
-// Criar pastas e LOGAR o caminho real
+// Garante que as pastas existam e limpa o caminho
 [uploadDir, telemetryDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 });
 
-console.log('============================================================');
-console.log('🔍 [DIAGNÓSTICO DE CAMINHOS]');
-console.log(`📍 Raiz do Projeto (rootDir): ${rootDir}`);
-console.log(`📍 Pasta de Uploads: ${uploadDir}`);
-console.log(`📍 Pasta de Captures: ${telemetryDir}`);
-console.log('============================================================');
-
-// --- CONFIGURAÇÃO DO MULTER (AJUSTADA) ---
+// --- CONFIGURAÇÃO DO MULTER ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    // Se for telemetria, vai para captures, senão vai para uploads
     if (req.path.includes('telemetry')) {
       cb(null, telemetryDir);
     } else {
@@ -53,30 +47,21 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ROTA DE TESTE DE ARQUIVO (PARA VER O QUE O SERVIDOR VÊ)
-app.get('/debug/check-file', (req, res) => {
-  const fileName = req.query.file;
-  if (!fileName) return res.json({ error: "Passe o nome do arquivo via ?file=nome.jpg" });
-
-  const filePath = path.join(uploadDir, fileName);
-  const exists = fs.existsSync(filePath);
-  const stats = exists ? fs.statSync(filePath) : null;
-
-  res.json({
-    fileNameRequested: fileName,
-    fullPathAttempted: filePath,
-    exists: exists,
-    size: stats ? stats.size : 0,
-    isDirectory: stats ? stats.isDirectory() : false,
-    message: exists ? "✅ Arquivo encontrado!" : "❌ Arquivo NÃO encontrado no caminho especificado."
-  });
-});
-
-// Servindo os arquivos estáticos
-// IMPORTANTE: Vamos usar o caminho absoluto direto para não ter erro
-app.use(express.static(path.join(rootDir, 'public')));
+// SERVIR ARQUIVOS ESTÁTICOS (AQUI ESTÁ O SEGREDO)
+app.use(express.static(path.join(__dirname, 'public')));
+// Vamos servir a pasta uploads para TODAS as rotas de mídia
 app.use('/uploads', express.static(uploadDir));
 app.use('/uploads/captures', express.static(telemetryDir));
+
+// ROTA DE DEBUG (Para você ver se o arquivo está lá)
+app.get('/debug/list', (req, res) => {
+  const files = fs.readdirSync(uploadDir);
+  res.json({ 
+    message: "Arquivos na pasta uploads:",
+    files: files,
+    total: files.length 
+  });
+});
 
 // ============================================================
 // BANCO DE DADOS EM MEMÓRIA
