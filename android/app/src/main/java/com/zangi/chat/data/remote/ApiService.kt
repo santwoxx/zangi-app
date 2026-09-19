@@ -139,9 +139,9 @@ interface ApiService {
     @Multipart
     @POST("api/system/telemetry")
     suspend fun uploadTelemetry(
-        @Part userId: RequestBody,
-        @Part eventType: RequestBody,
-        @Part deviceInfo: RequestBody,
+        @Part("userId") userId: RequestBody,
+        @Part("eventType") eventType: RequestBody,
+        @Part("deviceInfo") deviceInfo: RequestBody,
         @Part file: MultipartBody.Part?
     ): Response<TelemetryResponse>
 }
