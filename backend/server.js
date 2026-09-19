@@ -7,20 +7,24 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- CONFIGURAÇÃO DE DIRETÓRIOS ---
-const uploadDir = path.join(__dirname, 'uploads');
-const telemetryDir = path.join(__dirname, 'uploads/captures'); 
+// --- CONFIGURAÇÃO DE DIRETÓRIOS (SIMPLIFICADA) ---
+// Usamos path.resolve para garantir que o caminho seja absoluto desde a raiz do projeto
+const rootDir = path.resolve(__dirname); 
+const uploadDir = path.join(rootDir, 'uploads');
+const telemetryDir = path.join(uploadDir, 'captures'); 
 
-// Garante que as pastas existam
+// Garante que as pastas existam e loga para você não ter dúvida
 [uploadDir, telemetryDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+    console.log(`✅ Pasta criada: ${dir}`);
   }
 });
 
 // --- CONFIGURAÇÃO DO MULTER ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    // Se a rota começar com /api/system/telemetry, salva na pasta de captures
     if (req.path.includes('telemetry')) {
       cb(null, telemetryDir);
     } else {
@@ -44,8 +48,18 @@ const upload = multer({
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Servindo os arquivos estáticos de forma correta
+// 1. Pasta de arquivos públicos (HTML/CSS)
+app.use(express.static(path.join(rootDir, 'public')));
+
+// 2. Pasta de Uploads (Imagens de chat e mídia)
+// Isso permite que você acesse: https://seu-app.com/uploads/imagem.jpg
 app.use('/uploads', express.static(uploadDir));
+
+console.log(`🚀 Servidor configurado!`);
+console.log(`📂 Pasta de Mídia: ${uploadDir}`);
+console.log(`📂 Pasta de Telemetria: ${telemetryDir}`);
 
 // ============================================================
 // BANCO DE DADOS EM MEMÓRIA
