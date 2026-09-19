@@ -16,7 +16,7 @@ Backend simples e veloz construído com **Node.js + Express + Multer** para rece
    ```bash
    npm start
    ```
-   O servidor estará rodando em `http://localhost:3000`.
+   O servidor estará rodando em `https://zangi-app.onrender.com`.
 
 ---
 

@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // Endereço oficial em produção no Render: https://zangi-app.onrender.com/
-    // Para testar em emulador: http://10.0.2.2:3000/
     private var currentBaseUrl: String = "https://zangi-app.onrender.com/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {

