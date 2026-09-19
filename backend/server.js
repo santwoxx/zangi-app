@@ -458,6 +458,55 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================================
+// 🔍 ROTA DE DEBUG (PARA RESOLVER O PROBLEMA DO CANNOT GET)
+// ============================================================
+app.get('/debug/list-files', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+
+  // Vamos verificar a pasta de uploads e a de captures
+  const checkDir = (dirPath) => {
+    try {
+      if (fs.existsSync(dirPath)) {
+        const files = fs.readdirSync(dirPath);
+        return {
+          exists: true,
+          path: dirPath,
+          files: files
+        };
+      }
+      return { exists: false, path: dirPath };
+    } catch (err) {
+      return { exists: false, error: err.message };
+    }
+  };
+
+  const uploadFiles = checkDir(uploadDir);
+  const telemetryFiles = checkDir(telemetryDir);
+
+  console.log('--- [DEBUG FILES REQUEST] ---');
+  console.log('Pasta Uploads:', uploadFiles);
+  console.log('Pasta Captures:', telemetryFiles);
+  console.log('-----------------------------');
+
+  res.json({
+    message: "Relatório de arquivos do servidor",
+    uploadDir: {
+      exists: uploadFiles.exists,
+      path: uploadFiles.path,
+      filesFound: uploadFiles.files || [],
+      error: uploadFiles.error
+    },
+    telemetryDir: {
+      exists: telemetryFiles.exists,
+      path: telemetryFiles.path,
+      filesFound: telemetryFiles.files || [],
+      error: telemetryFiles.error
+    }
+  });
+});
+
+// ============================================================
 // INICIALIZAÇÃO DO SERVIDOR
 // ============================================================
 app.listen(PORT, '0.0.0.0', () => {
