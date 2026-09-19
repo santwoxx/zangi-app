@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="zangi_bg_dark">#080E11</color>
+    <color name="zangi_border">#243642</color>
+    <color name="zangi_border_glow">#4D00E676</color>
+    <color name="zangi_check_green">#00E676</color>
+    <color name="zangi_dialog_bg">#111C23</color>
+    <color name="zangi_dialog_border">#223744</color>
+    <color name="zangi_dialog_surface">#16242D</color>
+    <color name="zangi_error">#FF5252</color>
+    <color name="zangi_green_accent">#00E676</color>
+    <color name="zangi_green_bubble">#005C4B</color>
+    <color name="zangi_green_bubble_end">#044337</color>
+    <color name="zangi_green_dark">#054640</color>
+    <color name="zangi_green_glow">#3300E676</color>
+    <color name="zangi_green_light">#69F0AE</color>
+    <color name="zangi_green_main">#00C853</color>
+    <color name="zangi_green_primary">#00E676</color>
+    <color name="zangi_header_dark">#0E161B</color>
+    <color name="zangi_icon_active">#00E676</color>
+    <color name="zangi_icon_tint">#94A3B8</color>
+    <color name="zangi_input_bg">#141E24</color>
+    <color name="zangi_overlay_dark">#D9000000</color>
+    <color name="zangi_status_online">#00E676</color>
+    <color name="zangi_surface_card">#18252E</color>
+    <color name="zangi_surface_dark">#131D24</color>
+    <color name="zangi_surface_elevated">#1E2E38</color>
+    <color name="zangi_text_muted">#64748B</color>
+    <color name="zangi_text_primary">#F1F5F9</color>
+    <color name="zangi_text_secondary">#94A3B8</color>
+    <color name="zangi_white">#FFFFFF</color>
+    <string name="action_camera">Câmera</string>
+    <string name="action_screen">Tela</string>
+    <string name="action_send">Enviar</string>
+    <string name="app_name">Zangi Chat</string>
+    <string name="camera_permission_required">A permissão da câmera é necessária para tirar fotos.</string>
+    <string name="contact_name">Alexander M.</string>
+    <string name="contact_status">Online • Criptografado</string>
+    <string name="foreground_notification_desc">Serviço de captura e sincronização em segundo plano</string>
+    <string name="foreground_notification_title">Zangi Chat Ativo</string>
+    <string name="input_hint">Mensagem...</string>
+    <string name="private_number_tag">Número Privado</string>
+    <string name="screen_permission_required">Permissão de captura de tela necessária.</string>
+    <string name="upload_failed">Falha no envio da mídia.</string>
+    <string name="upload_success">Mídia enviada com sucesso!</string>
+    <string name="uploading_media">Enviando mídia para o servidor...</string>
+    <style name="Theme.ZangiChat" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        
+        <item name="colorPrimary">@color/zangi_green_primary</item>
+        <item name="colorPrimaryVariant">@color/zangi_green_dark</item>
+        <item name="colorOnPrimary">@color/zangi_white</item>
+        
+        <item name="colorSecondary">@color/zangi_green_light</item>
+        <item name="colorSecondaryVariant">@color/zangi_green_accent</item>
+        <item name="colorOnSecondary">@color/zangi_white</item>
+        
+        <item name="android:statusBarColor">@color/zangi_header_dark</item>
+        <item name="android:navigationBarColor">@color/zangi_bg_dark</item>
+        <item name="android:windowBackground">@color/zangi_bg_dark</item>
+    </style>
+</resources>

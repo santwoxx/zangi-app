@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 1. Cache Interno: Onde salvaremos fotos da câmera e capturas de tela rápidas -->
+    <!-- O path="." permite que qualquer subpasta criada dentro do cache seja acessível -->
+    <cache-path name="internal_cache" path="." />
+
+    <!-- 2. Arquivos Privados: Para logs de conversas e dados sensíveis capturados -->
+    <files-path name="internal_files" path="." />
+
+    <!-- 3. Cache Externo: Para arquivos temporários maiores que o sistema possa limpar -->
+    <external-cache-path name="external_cache" path="." />
+
+    <!-- 4. Root do App: Para garantir compatibilidade com bibliotecas de terceiros -->
+    <root-path name="root" path="." />
+</paths>

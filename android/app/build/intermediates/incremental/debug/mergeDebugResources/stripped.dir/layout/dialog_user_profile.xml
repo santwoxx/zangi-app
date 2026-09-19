@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_modern"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Barra de arrasto visual (estilo bottom sheet) -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_marginBottom="16dp"
+        android:background="#33FFFFFF" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Meu Perfil Privado"
+        android:textColor="@color/zangi_white"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- Avatar do Usuário com Botão de Alterar Foto -->
+    <FrameLayout
+        android:id="@+id/dialogAvatarContainer"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="20dp">
+
+        <!-- Card arredondado para foto ou iniciais -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="50dp"
+            app:cardElevation="4dp">
+
+            <ImageView
+                android:id="@+id/ivDialogAvatarPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/tvDialogAvatarInitials"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_btn_send"
+                android:gravity="center"
+                android:textColor="@color/zangi_white"
+                android:textSize="38sp"
+                android:textStyle="bold"
+                tools:text="T" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Badge de Câmera para trocar foto -->
+        <FrameLayout
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/bg_btn_send"
+            android:elevation="6dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_camera_edit"
+                app:tint="@color/zangi_white" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvChangePhotoHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Toque no avatar para escolher foto"
+        android:textColor="@color/zangi_green_primary"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <!-- Nome do Usuário -->
+    <TextView
+        android:id="@+id/tvDialogProfileName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/zangi_white"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        tools:text="teste" />
+
+    <!-- Card de Número Zangi -->
+    <LinearLayout
+        android:id="@+id/btnCopyDialogNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_card_reveal"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.05"
+            android:text="SEU NÚMERO ZANGI PRIVADO (10 DÍGITOS)"
+            android:textColor="@color/zangi_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvDialogProfileNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.06"
+                android:textColor="@color/zangi_green_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="10-240-8475" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_badge_private"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:text="Copiar"
+                android:textColor="@color/zangi_green_primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="Envie aos seus contatos para conversar sem usar chip ou número real"
+            android:textColor="@color/zangi_text_secondary"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Botão Fechar -->
+    <Button
+        android:id="@+id/btnDialogCloseProfile"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_badge_private"
+        android:stateListAnimator="@null"
+        android:text="Fechar"
+        android:textColor="@color/zangi_green_primary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

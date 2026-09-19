@@ -1,0 +1,17 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme estilo Zangi -->
+    <style name="Theme.ZangiChat" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/zangi_green_primary</item>
+        <item name="colorPrimaryVariant">@color/zangi_green_dark</item>
+        <item name="colorOnPrimary">@color/zangi_white</item>
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/zangi_green_light</item>
+        <item name="colorSecondaryVariant">@color/zangi_green_accent</item>
+        <item name="colorOnSecondary">@color/zangi_white</item>
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/zangi_header_dark</item>
+        <item name="android:navigationBarColor">@color/zangi_bg_dark</item>
+        <item name="android:windowBackground">@color/zangi_bg_dark</item>
+    </style>
+</resources>

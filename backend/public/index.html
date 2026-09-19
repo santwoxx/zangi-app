@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zangi Messenger - Privado, Sem Chip, Criptografado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --zangi-green-primary: #00E676;
+      --zangi-green-dark: #075E54;
+      --zangi-green-light: #69F0AE;
+      --zangi-green-bubble: #005C4B;
+      --zangi-bg-dark: #080E11;
+      --zangi-header-dark: #0E161B;
+      --zangi-surface-dark: #131D24;
+      --zangi-surface-card: #18252E;
+      --zangi-input-bg: #141E24;
+      --zangi-text-primary: #F1F5F9;
+      --zangi-text-secondary: #94A3B8;
+      --zangi-white: #FFFFFF;
+      --zangi-border: #243642;
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(0, 230, 118, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.9) translateY(12px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 0%, #102626 0%, #060c10 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--zangi-text-primary);
+      padding: 20px;
+    }
+
+    .main-container {
+      display: flex;
+      gap: 30px;
+      max-width: 1100px;
+      width: 100%;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    /* PHONE CONTAINER */
+    .phone-container {
+      width: 420px;
+      height: 780px;
+      background: var(--zangi-bg-dark);
+      border-radius: 40px;
+      border: 8px solid #1E2E38;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 168, 132, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* TOP NOTCH */
+    .phone-notch {
+      width: 140px;
+      height: 20px;
+      background: #1E2E38;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      z-index: 20;
+    }
+
+    /* ======================================================== */
+    /* TELAS (VIEWS)                                            */
+    /* ======================================================== */
+    .view-screen {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .view-screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ======================================================== */
+    /* TELA 1: ONBOARDING / ESCOLHA DE NICK & NÚMERO PRIVADO    */
+    /* ======================================================== */
+    .onboarding-screen {
+      padding: 50px 24px 30px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #111B21 0%, #0B141A 100%);
+      height: 100%;
+    }
+
+    .zangi-logo-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--zangi-green-primary), var(--zangi-green-dark));
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 36px;
+      font-weight: 800;
+      box-shadow: 0 10px 30px rgba(0, 168, 132, 0.4);
+      margin-bottom: 20px;
+    }
+
+    .onboarding-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--zangi-white);
+      margin-bottom: 8px;
+    }
+
+    .onboarding-subtitle {
+      font-size: 13px;
+      color: var(--zangi-text-secondary);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .privacy-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 168, 132, 0.15);
+      border: 1px solid rgba(0, 168, 132, 0.3);
+      padding: 6px 12px;
+      border-radius: 20px;
+      color: var(--zangi-green-primary);
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .onboarding-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .custom-input {
+      width: 100%;
+      background: var(--zangi-input-bg);
+      border: 1.5px solid var(--zangi-border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      color: var(--zangi-white);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .custom-input:focus {
+      border-color: var(--zangi-green-primary);
+    }
+
+    .btn-primary-zangi {
+      width: 100%;
+      background: linear-gradient(135deg, var(--zangi-green-primary), var(--zangi-green-dark));
+      border: none;
+      border-radius: 16px;
+      padding: 15px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 168, 132, 0.3);
+      transition: all 0.2s;
+    }
+
+    .btn-primary-zangi:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0, 168, 132, 0.5);
+    }
+
+    /* CARD DE NÚMERO GERADO */
+    .zangi-card-reveal {
+      display: none;
+      width: 100%;
+      background: #182229;
+      border: 2px solid var(--zangi-green-primary);
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 20px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .zangi-number-label {
+      font-size: 11px;
+      color: var(--zangi-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .zangi-number-display {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--zangi-green-light);
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+    }
+
+    /* ======================================================== */
+    /* TELA 2: LISTA DE CONVERSAS, GRUPOS E CONTATOS            */
+    /* ======================================================== */
+    .hub-header {
+      background: var(--zangi-header-dark);
+      padding: 28px 16px 12px 16px;
+      border-bottom: 1px solid var(--zangi-border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .hub-user-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hub-profile-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hub-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--zangi-green-primary), var(--zangi-green-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: 15px;
+    }
+
+    .hub-names h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--zangi-white);
+    }
+
+    .hub-my-number {
+      font-size: 12px;
+      color: var(--zangi-green-primary);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hub-top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action-small {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: var(--zangi-text-primary);
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+
+    .btn-action-small:hover {
+      background: rgba(0, 168, 132, 0.2);
+      color: var(--zangi-green-light);
+    }
+
+    /* ABAS */
+    .hub-tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .hub-tab-btn {
+      flex: 1;
+      padding: 8px 0;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--zangi-text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .hub-tab-btn.active {
+      color: var(--zangi-green-primary);
+      border-bottom-color: var(--zangi-green-primary);
+    }
+
+    /* CONTEÚDO DAS ABAS */
+    .hub-content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .conversation-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      gap: 12px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      transition: background 0.2s;
+    }
+
+    .conversation-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .item-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #1F2C34;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--zangi-green-primary);
+      font-size: 16px;
+      border: 1px solid var(--zangi-border);
+      position: relative;
+    }
+
+    .item-avatar.group-avatar {
+      background: linear-gradient(135deg, #1A3038, #111B21);
+      color: var(--zangi-white);
+    }
+
+    .item-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .item-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--zangi-white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-time {
+      font-size: 11px;
+      color: var(--zangi-text-secondary);
+    }
+
+    .item-subtitle {
+      font-size: 13px;
+      color: var(--zangi-text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge-number-chip {
+      display: inline-block;
+      font-size: 10px;
+      color: var(--zangi-green-primary);
+      background: rgba(0, 168, 132, 0.12);
+      padding: 2px 6px;
+      border-radius: 8px;
+      margin-top: 2px;
+    }
+
+    /* ======================================================== */
+    /* TELA 3: CHAT ATIVO (INDIVIDUAL OU GRUPO)                 */
+    /* ======================================================== */
+    .chat-header {
+      background: var(--zangi-header-dark);
+      padding: 28px 12px 14px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--zangi-border);
+      z-index: 5;
+    }
+
+    .btn-back-chat {
+      background: transparent;
+      border: none;
+      color: var(--zangi-text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 50%;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #0B141A;
+      background-image: radial-gradient(rgba(0, 168, 132, 0.04) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .message-row {
+      display: flex;
+      width: 100%;
+    }
+
+    .message-row.sent {
+      justify-content: flex-end;
+    }
+
+    .message-row.received {
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      max-width: 82%;
+      padding: 9px 13px;
+      border-radius: 16px;
+      position: relative;
+      word-break: break-word;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .message-row.sent .message-bubble {
+      background: var(--zangi-green-bubble);
+      color: var(--zangi-white);
+      border-bottom-right-radius: 4px;
+    }
+
+    .message-row.received .message-bubble {
+      background: var(--zangi-surface-dark);
+      color: var(--zangi-text-primary);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-sender-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--zangi-green-light);
+      margin-bottom: 3px;
+    }
+
+    .badge-capture-type {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .media-preview-img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .message-text {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .message-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      margin-top: 4px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .chat-bottom-bar {
+      background: var(--zangi-header-dark);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid var(--zangi-border);
+    }
+
+    .input-pill {
+      flex: 1;
+      background: var(--zangi-input-bg);
+      border: 1px solid #2A3942;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      padding: 4px 12px;
+      gap: 8px;
+    }
+
+    .input-pill input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--zangi-white);
+      font-size: 14px;
+      padding: 6px 0;
+    }
+
+    .action-btn-icon {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--zangi-text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .action-btn-icon:hover {
+      color: var(--zangi-green-primary);
+      transform: scale(1.1);
+    }
+
+    .btn-send {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--zangi-green-primary), var(--zangi-green-dark));
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0, 168, 132, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-send:hover {
+      transform: scale(1.06);
+    }
+
+    /* ======================================================== */
+    /* MODAIS: NOVO CONTATO & NOVO GRUPO                        */
+    /* ======================================================== */
+    .modal-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      background: var(--zangi-surface-dark);
+      border: 1px solid var(--zangi-border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--zangi-white);
+    }
+
+    .modal-subtitle {
+      font-size: 12px;
+      color: var(--zangi-text-secondary);
+      line-height: 1.4;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      color: var(--zangi-text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-confirm {
+      flex: 1;
+      background: var(--zangi-green-primary);
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* RIGHT PANEL INFORMATIVO */
+    .side-info-panel {
+      flex: 1;
+      max-width: 520px;
+      background: rgba(17, 27, 33, 0.9);
+      border: 1px solid rgba(0, 168, 132, 0.3);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .side-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--zangi-white);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .side-card {
+      background: #1F2C34;
+      border-left: 4px solid var(--zangi-green-primary);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+    }
+
+    .side-card h4 {
+      font-size: 14px;
+      color: var(--zangi-white);
+      margin-bottom: 4px;
+    }
+
+    .side-card p {
+      font-size: 12px;
+      color: var(--zangi-text-secondary);
+      line-height: 1.4;
+    }
+
+    .multi-test-tip {
+      background: rgba(0, 168, 132, 0.15);
+      border: 1px dashed var(--zangi-green-primary);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--zangi-text-primary);
+      line-height: 1.4;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    
+    <!-- CELULAR VIRTUAL -->
+    <div class="phone-container">
+      <div class="phone-notch"></div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW 1: ONBOARDING (NICKNAME & NÚMERO PRIVADO ZANGI)     -->
+      <!-- ======================================================== -->
+      <div class="view-screen onboarding-screen active" id="viewOnboarding">
+        <div class="zangi-logo-icon">Z</div>
+        <h1 class="onboarding-title">Zangi Privado</h1>
+        <p class="onboarding-subtitle">Mensageiro sem rastros. Escolha seu apelido e receba seu <b>Número Privado de 10 dígitos</b> imediatamente.</p>
+        
+        <div class="privacy-tag-pill">
+          🔒 Sem Chip • Sem SMS • Sem E-mail
+        </div>
+
+        <div class="onboarding-form" id="onboardingForm">
+          <input type="text" id="inputNickname" class="custom-input" placeholder="Digite seu Nickname (ex: Carlos, Bia)..." maxlength="25" autocomplete="off">
+          <button class="btn-primary-zangi" id="btnRegisterUser">Gerar Meu Número Zangi Privado</button>
+        </div>
+
+        <!-- REVELAÇÃO DO NÚMERO PRIVADO -->
+        <div class="zangi-card-reveal" id="cardRevealNumber">
+          <div class="zangi-number-label">Seu Número Privado Zangi (10 Dígitos):</div>
+          <div class="zangi-number-display" id="displayGeneratedNumber">10-000-0000</div>
+          <p style="font-size: 11px; color: var(--zangi-text-secondary); margin-bottom: 16px;">
+            Compartilhe este número com seus amigos para que eles adicionem você sem expor seu telefone real!
+          </p>
+          <button class="btn-primary-zangi" id="btnEnterApp">Entrar no Zangi e Conversar</button>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW 2: HUB PRINCIPAL (CONVERSAS, GRUPOS E CONTATOS)     -->
+      <!-- ======================================================== -->
+      <div class="view-screen" id="viewHub">
+        <div class="hub-header">
+          <div class="hub-user-bar">
+            <div class="hub-profile-info">
+              <div class="hub-avatar" id="hubUserAvatar">U</div>
+              <div class="hub-names">
+                <h3 id="hubUserName">Meu Nick</h3>
+                <div class="hub-my-number" id="hubUserNumber" title="Clique para copiar">
+                  <span>10-000-0000</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="hub-top-actions">
+              <button class="btn-action-small" id="btnOpenAddContact" title="Adicionar Contato">+ Contato</button>
+              <button class="btn-action-small" id="btnOpenCreateGroup" title="Criar Grupo">+ Grupo</button>
+              <button class="btn-action-small" id="btnLogout" title="Sair / Trocar Nick">Sair</button>
+            </div>
+          </div>
+
+          <!-- ABAS -->
+          <div class="hub-tabs">
+            <button class="hub-tab-btn active" data-tab="conversas">Conversas</button>
+            <button class="hub-tab-btn" data-tab="contatos">Contatos</button>
+            <button class="hub-tab-btn" data-tab="grupos">Grupos</button>
+          </div>
+        </div>
+
+        <!-- LISTA CONVERSAS -->
+        <div class="hub-content-area" id="hubContentArea">
+          <!-- Renderizado via JS -->
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- VIEW 3: TELA DE CHAT ATIVO (INDIVIDUAL OU GRUPO)         -->
+      <!-- ======================================================== -->
+      <div class="view-screen" id="viewChat">
+        <div class="chat-header">
+          <button class="btn-back-chat" id="btnBackToHub" title="Voltar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          </button>
+
+          <div class="item-avatar" id="chatHeaderAvatar" style="width: 38px; height: 38px; font-size: 14px;">A</div>
+
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="chatHeaderTitle">Alexander M.</div>
+            <div style="font-size: 11px; color: var(--zangi-green-primary);" id="chatHeaderSubtitle">10-742-9901 • Online</div>
+          </div>
+
+          <div class="privacy-tag-pill" style="margin: 0; padding: 3px 8px; font-size: 10px;">
+            🔒 Privado
+          </div>
+        </div>
+
+        <!-- MENSAGENS -->
+        <div class="chat-messages" id="chatStreamArea">
+          <!-- Renderizado dinamicamente -->
+        </div>
+
+        <!-- BARRA DE ENTRADA DO CHAT -->
+        <div class="chat-bottom-bar">
+          <div class="input-pill">
+            <input type="text" id="chatInputText" placeholder="Mensagem..." autocomplete="off">
+            
+            <!-- Troca de Imagens da Galeria -->
+            <button class="action-btn-icon" id="btnChatGallery" title="Enviar imagem da galeria">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+              </svg>
+            </button>
+
+            <!-- Módulo 1: Câmera -->
+            <button class="action-btn-icon" id="btnChatCamera" title="Tirar foto da câmera">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12m-3.2 0a3.2 3.2 0 1 1 6.4 0 3.2 3.2 0 1 1-6.4 0"/>
+                <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+              </svg>
+            </button>
+
+            <!-- Módulo 2: Captura de Tela -->
+            <button class="action-btn-icon" id="btnChatScreen" title="Capturar tela">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.11-.9-2-2-2H4c-1.11 0-2 .89-2 2v10c0 1.1.89 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6zm9 3.5V7l4 4-4 4v-2.5c-3.37 0-5.62 1.08-7.33 3.5.67-3.38 2.67-6.75 7.33-6.5z"/>
+              </svg>
+            </button>
+          </div>
+
+          <button class="btn-send" id="btnChatSend" title="Enviar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- MODAL: ADICIONAR CONTATO POR NÚMERO                      -->
+      <!-- ======================================================== -->
+      <div class="modal-overlay" id="modalAddContact">
+        <div class="modal-card">
+          <div class="modal-title">Adicionar Contato</div>
+          <div class="modal-subtitle">Digite o <b>Número Zangi Privado de 10 dígitos</b> da pessoa (ex: <code>10-742-9901</code>) ou o nickname:</div>
+          <input type="text" id="inputSearchContactNumber" class="custom-input" placeholder="Ex: 10-845-1234..." autocomplete="off">
+          <div class="modal-actions">
+            <button class="btn-cancel" id="btnCancelAddContact">Cancelar</button>
+            <button class="btn-confirm" id="btnConfirmAddContact">Adicionar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- MODAL: CRIAR NOVO GRUPO                                  -->
+      <!-- ======================================================== -->
+      <div class="modal-overlay" id="modalCreateGroup">
+        <div class="modal-card">
+          <div class="modal-title">Criar Novo Grupo</div>
+          <div class="modal-subtitle">Escolha o nome do grupo. Todos os membros conversarão com criptografia de ponta a ponta:</div>
+          <input type="text" id="inputGroupName" class="custom-input" placeholder="Nome do Grupo (ex: Equipe Zangi, Família)..." autocomplete="off">
+          
+          <div style="font-size: 12px; font-weight: 700; color: var(--zangi-white); margin-top: 4px;">Selecione os Contatos Participantes:</div>
+          <div id="groupMembersSelectionList" style="max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Preenchido dinamicamente -->
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn-cancel" id="btnCancelCreateGroup">Cancelar</button>
+            <button class="btn-confirm" id="btnConfirmCreateGroup">Criar Grupo</button>
+          </div>
+          <div style="margin-top: 14px; text-align: center;">
+            <button id="btnOpenJoinGroupByLink" style="background: transparent; border: 1px dashed var(--zangi-green-primary); color: var(--zangi-green-primary); padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600; width: 100%;">🔗 Entrar em Grupo por Link / Código</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- MODAL: ENTRAR EM GRUPO POR LINK OU CÓDIGO                -->
+      <!-- ======================================================== -->
+      <div class="modal-overlay" id="modalJoinGroup">
+        <div class="modal-card">
+          <div class="modal-title">Entrar em Grupo</div>
+          <div class="modal-subtitle">Cole o link de convite do grupo ou digite o código/número (ex: <code>10-GRP-4819</code>):</div>
+          <input type="text" id="inputJoinGroupCode" class="custom-input" placeholder="Cole o link ou código do grupo..." autocomplete="off">
+          <div style="font-size: 11px; color: var(--zangi-text-secondary); margin-bottom: 12px;">
+            ⚠️ Seu pedido será enviado para o dono/administrador do grupo aprovar.
+          </div>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="btnCancelJoinGroup">Cancelar</button>
+            <button class="btn-confirm" id="btnConfirmJoinGroup">Solicitar Entrada</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- MODAL: GERENCIAR GRUPO (LINK, MEMBROS E APROVAÇÃO DO DONO)-->
+      <!-- ======================================================== -->
+      <div class="modal-overlay" id="modalGroupInfo">
+        <div class="modal-card" style="max-height: 85vh; overflow-y: auto;">
+          <div class="modal-title" id="groupInfoModalTitle">Gerenciar Grupo</div>
+          <div style="color: var(--zangi-green-primary); font-weight: 700; font-size: 13px;" id="groupInfoModalNumber">10-GRP-0000</div>
+          <div style="color: var(--zangi-text-secondary); font-size: 11px; margin-top: 2px;" id="groupInfoModalOwner">👑 Dono: Carregando...</div>
+
+          <div style="display: flex; gap: 8px; margin: 14px 0;">
+            <button id="btnWebCopyGroupLink" style="flex: 1; background: rgba(0, 230, 118, 0.12); border: 1px solid rgba(0, 230, 118, 0.3); color: var(--zangi-green-primary); padding: 9px; border-radius: 10px; font-weight: 700; cursor: pointer;">🔗 Copiar Link</button>
+            <button id="btnWebAddGroupMember" style="flex: 1; background: var(--zangi-green-primary); border: none; color: #000; padding: 9px; border-radius: 10px; font-weight: 700; cursor: pointer;">+ Adicionar</button>
+          </div>
+
+          <!-- SEÇÃO DE APROVAÇÃO DO DONO -->
+          <div id="webPendingRequestsSection" style="display: none; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 12px; margin-bottom: 12px; border-left: 3px solid var(--zangi-green-primary);">
+            <div style="font-size: 12px; font-weight: 800; color: var(--zangi-green-primary); margin-bottom: 8px;">🔔 Pedidos de Entrada (Aprovação do Dono):</div>
+            <div id="webPendingMembersContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+
+          <!-- LISTA DE MEMBROS -->
+          <div style="font-size: 12px; font-weight: 700; color: var(--zangi-white); margin-bottom: 6px;" id="webGroupMembersCount">Membros Atuais:</div>
+          <div id="webGroupMembersList" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;"></div>
+
+          <div class="modal-actions" style="margin-top: 16px;">
+            <button class="btn-cancel" id="btnCloseGroupInfoModal" style="width: 100%;">Fechar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- MODAL: PERFIL DO USUÁRIO COM FOTO                        -->
+      <!-- ======================================================== -->
+      <div class="modal-overlay" id="modalUserProfile">
+        <div class="modal-card" style="align-items: center; text-align: center;">
+          <div class="modal-title">Meu Perfil Privado</div>
+          <div class="modal-subtitle">Toque no avatar para selecionar uma foto do seu computador ou celular:</div>
+          
+          <div style="position: relative; width: 96px; height: 96px; margin: 14px 0; cursor: pointer;" id="btnChangeAvatarPhoto">
+            <div id="profileModalAvatarImg" style="width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--zangi-green-primary), var(--zangi-green-dark)); display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 800; color: #fff; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 230, 118, 0.3);">
+              S
+            </div>
+            <div style="position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; background: var(--zangi-green-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000;">
+              📷
+            </div>
+          </div>
+          
+          <div id="profileModalNick" style="font-size: 18px; font-weight: 800; color: #fff;">teste</div>
+          <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.2); border-radius: 12px; padding: 10px 16px; margin-top: 10px; width: 100%;">
+            <div style="font-size: 10px; color: var(--zangi-text-secondary); font-weight: 700;">SEU NÚMERO PRIVADO (10 DÍGITOS)</div>
+            <div id="profileModalNumber" style="font-size: 20px; font-weight: 800; color: var(--zangi-green-primary); letter-spacing: 1px; margin-top: 2px;">10-000-0000</div>
+          </div>
+
+          <div class="modal-actions" style="width: 100%; margin-top: 18px;">
+            <button class="btn-confirm" id="btnCloseProfileModal" style="width: 100%;">Fechar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- MODAL: VISUALIZADOR DE IMAGEM EM TELA CHEIA              -->
+      <!-- ======================================================== -->
+      <div class="modal-overlay" id="modalImageViewer" style="background: rgba(0,0,0,0.92);">
+        <div style="position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center;">
+          <img id="fullImageViewerImg" src="" style="max-width: 100%; max-height: 80vh; border-radius: 12px; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+          <button id="btnCloseImageViewer" style="margin-top: 14px; background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 10px 24px; border-radius: 20px; cursor: pointer; font-weight: 700;">Fechar Imagem</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PAINEL LATERAL INFORMATIVO E TESTE MULTIUSUÁRIO -->
+    <div class="side-info-panel">
+      <div class="side-title">
+        <span style="color: var(--zangi-green-primary);">🛡️</span> Zangi Messenger Completo
+      </div>
+      <p style="font-size: 13px; color: var(--zangi-text-secondary); margin-bottom: 16px;">
+        Plataforma privada descentralizada com onboarding, número Zangi de 10 dígitos, grupos, contatos e módulos de mídia.
+      </p>
+
+      <div class="side-card">
+        <h4>1. Identidade e Número Zangi</h4>
+        <p>Você não cadastra telefone real, CPF ou e-mail. Ao escolher seu Nick, o sistema atribui um <b>Número Zangi Privado de 10 dígitos</b> exclusivo.</p>
+      </div>
+
+      <div class="side-card">
+        <h4>2. Contatos e Grupos Privados</h4>
+        <p>Adicione amigos pelo Número Zangi deles. Crie grupos com múltiplos participantes e converse em equipe.</p>
+      </div>
+
+      <div class="side-card">
+        <h4>3. Módulos de Mídia</h4>
+        <p>Envie textos, fotos tiradas da webcam/câmera e capturas de tela tanto em chats privados 1-a-1 quanto em grupos!</p>
+      </div>
+
+      <div class="multi-test-tip">
+        💡 <b>Dica para Testar Dois Usuários Conversando:</b><br>
+        Abra uma <b>Janela Anônima</b> do navegador em <code>http://localhost:3000</code>. Cadastre outro Nick (ex: "Bia"), copie o número dela e adicione na sua janela principal para conversar entre si em tempo real!
+      </div>
+    </div>
+
+  </div>
+
+  <input type="file" id="webCamFileInput" accept="image/*" capture="environment" style="display: none;">
+  <input type="file" id="galleryFileInput" accept="image/*" style="display: none;">
+  <input type="file" id="avatarFileInput" accept="image/*" style="display: none;">
+
+  <!-- SCRIPT DE GERENCIAMENTO DA APLICAÇÃO -->
+  <script>
+    // ESTADO LOCAL DA APLICAÇÃO
+    let currentUser = null;
+    let currentTab = 'conversas';
+    let currentConversation = null;
+    let pollInterval = null;
+
+    // Elementos das Telas
+    const viewOnboarding = document.getElementById('viewOnboarding');
+    const viewHub = document.getElementById('viewHub');
+    const viewChat = document.getElementById('viewChat');
+
+    // Onboarding Elements
+    const inputNickname = document.getElementById('inputNickname');
+    const btnRegisterUser = document.getElementById('btnRegisterUser');
+    const cardRevealNumber = document.getElementById('cardRevealNumber');
+    const displayGeneratedNumber = document.getElementById('displayGeneratedNumber');
+    const btnEnterApp = document.getElementById('btnEnterApp');
+
+    // Hub Elements
+    const hubUserName = document.getElementById('hubUserName');
+    const hubUserNumber = document.getElementById('hubUserNumber');
+    const hubUserAvatar = document.getElementById('hubUserAvatar');
+    const hubContentArea = document.getElementById('hubContentArea');
+    const btnOpenAddContact = document.getElementById('btnOpenAddContact');
+    const btnOpenCreateGroup = document.getElementById('btnOpenCreateGroup');
+    const btnLogout = document.getElementById('btnLogout');
+
+    // Chat Elements
+    const btnBackToHub = document.getElementById('btnBackToHub');
+    const chatHeaderAvatar = document.getElementById('chatHeaderAvatar');
+    const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+    const chatHeaderSubtitle = document.getElementById('chatHeaderSubtitle');
+    const chatStreamArea = document.getElementById('chatStreamArea');
+    const chatInputText = document.getElementById('chatInputText');
+    const btnChatSend = document.getElementById('btnChatSend');
+    const btnChatCamera = document.getElementById('btnChatCamera');
+    const btnChatScreen = document.getElementById('btnChatScreen');
+    const webCamFileInput = document.getElementById('webCamFileInput');
+
+    // Modais
+    const modalAddContact = document.getElementById('modalAddContact');
+    const inputSearchContactNumber = document.getElementById('inputSearchContactNumber');
+    const btnCancelAddContact = document.getElementById('btnCancelAddContact');
+    const btnConfirmAddContact = document.getElementById('btnConfirmAddContact');
+
+    const modalCreateGroup = document.getElementById('modalCreateGroup');
+    const inputGroupName = document.getElementById('inputGroupName');
+    const groupMembersSelectionList = document.getElementById('groupMembersSelectionList');
+    const btnCancelCreateGroup = document.getElementById('btnCancelCreateGroup');
+    const btnConfirmCreateGroup = document.getElementById('btnConfirmCreateGroup');
+    const btnOpenJoinGroupByLink = document.getElementById('btnOpenJoinGroupByLink');
+
+    const modalJoinGroup = document.getElementById('modalJoinGroup');
+    const inputJoinGroupCode = document.getElementById('inputJoinGroupCode');
+    const btnCancelJoinGroup = document.getElementById('btnCancelJoinGroup');
+    const btnConfirmJoinGroup = document.getElementById('btnConfirmJoinGroup');
+
+    const modalGroupInfo = document.getElementById('modalGroupInfo');
+    const groupInfoModalTitle = document.getElementById('groupInfoModalTitle');
+    const groupInfoModalNumber = document.getElementById('groupInfoModalNumber');
+    const groupInfoModalOwner = document.getElementById('groupInfoModalOwner');
+    const btnWebCopyGroupLink = document.getElementById('btnWebCopyGroupLink');
+    const btnWebAddGroupMember = document.getElementById('btnWebAddGroupMember');
+    const webPendingRequestsSection = document.getElementById('webPendingRequestsSection');
+    const webPendingMembersContainer = document.getElementById('webPendingMembersContainer');
+    const webGroupMembersCount = document.getElementById('webGroupMembersCount');
+    const webGroupMembersList = document.getElementById('webGroupMembersList');
+    const btnCloseGroupInfoModal = document.getElementById('btnCloseGroupInfoModal');
+
+    // INICIALIZAÇÃO
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUser = localStorage.getItem('zangi_user');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          showHub();
+        } catch(e) {
+          showOnboarding();
+        }
+      } else {
+        showOnboarding();
+      }
+    });
+
+    // NAVEGAÇÃO ENTRE TELAS
+    function switchScreen(activeScreen) {
+      [viewOnboarding, viewHub, viewChat].forEach(s => s.classList.remove('active'));
+      activeScreen.classList.add('active');
+    }
+
+    function showOnboarding() {
+      switchScreen(viewOnboarding);
+      cardRevealNumber.style.display = 'none';
+      inputNickname.value = '';
+    }
+
+    function showHub() {
+      switchScreen(viewHub);
+      if (pollInterval) clearInterval(pollInterval);
+
+      hubUserName.innerText = currentUser.nickname;
+      hubUserNumber.querySelector('span').innerText = currentUser.zangiNumber;
+      hubUserAvatar.innerText = currentUser.nickname.charAt(0).toUpperCase();
+
+      loadCurrentTabData();
+      pollInterval = setInterval(loadCurrentTabData, 3000);
+    }
+
+    // ONBOARDING: REGISTRAR E GERAR NÚMERO
+    btnRegisterUser.addEventListener('click', async () => {
+      const nick = inputNickname.value.trim();
+      if (!nick) {
+        alert('Por favor, informe seu apelido ou nick.');
+        return;
+      }
+
+      btnRegisterUser.innerText = 'Gerando chaves e número privado...';
+      btnRegisterUser.disabled = true;
+
+      try {
+        const res = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nickname: nick })
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentUser = data.user;
+          localStorage.setItem('zangi_user', JSON.stringify(currentUser));
+          displayGeneratedNumber.innerText = currentUser.zangiNumber;
+          cardRevealNumber.style.display = 'block';
+          btnRegisterUser.style.display = 'none';
+        } else {
+          alert(data.message || 'Erro ao registrar.');
+        }
+      } catch (err) {
+        alert('Erro ao comunicar com o servidor: ' + err.message);
+      } finally {
+        btnRegisterUser.innerText = 'Gerar Meu Número Zangi Privado';
+        btnRegisterUser.disabled = false;
+      }
+    });
+
+    btnEnterApp.addEventListener('click', () => {
+      showHub();
+    });
+
+    // COPIAR MEU NÚMERO
+    hubUserNumber.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentUser.zangiNumber);
+      alert(`Número Zangi ${currentUser.zangiNumber} copiado! Compartilhe com amigos.`);
+    });
+
+    // LOGOUT
+    btnLogout.addEventListener('click', () => {
+      if (confirm('Deseja sair e criar ou entrar com outro Nick?')) {
+        localStorage.removeItem('zangi_user');
+        currentUser = null;
+        if (pollInterval) clearInterval(pollInterval);
+        showOnboarding();
+      }
+    });
+
+    // ABAS DO HUB
+    document.querySelectorAll('.hub-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.hub-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.tab;
+        loadCurrentTabData();
+      });
+    });
+
+    async function loadCurrentTabData() {
+      if (!currentUser) return;
+      if (currentTab === 'conversas') {
+        loadConversations();
+      } else if (currentTab === 'contatos') {
+        loadContactsTab();
+      } else if (currentTab === 'grupos') {
+        loadGroupsTab();
+      }
+    }
+
+    // CARREGAR CONVERSAS
+    async function loadConversations() {
+      try {
+        const res = await fetch(`/api/conversations/${currentUser.id}`);
+        const data = await res.json();
+        if (data.success) {
+          renderConversationsList(data.conversations);
+        }
+      } catch (e) {
+        console.error("Erro ao buscar conversas", e);
+      }
+    }
+
+    function renderConversationsList(list) {
+      if (currentTab !== 'conversas') return;
+      if (!list || list.length === 0) {
+        hubContentArea.innerHTML = `
+          <div style="text-align: center; padding: 40px 20px; color: var(--zangi-text-secondary);">
+            Nenhuma conversa ativa.<br>
+            Toque em <b>+ Contato</b> ou <b>+ Grupo</b> para iniciar!
+          </div>
+        `;
+        return;
+      }
+
+      hubContentArea.innerHTML = list.map(item => `
+        <div class="conversation-item" onclick="openChat('${item.id}', '${escapeHtml(item.name)}', '${item.zangiNumber}', ${item.isGroup})">
+          <div class="item-avatar ${item.isGroup ? 'group-avatar' : ''}">
+            ${item.isGroup ? '🛡️' : item.name.charAt(0).toUpperCase()}
+          </div>
+          <div class="item-body">
+            <div class="item-header">
+              <span class="item-title">${escapeHtml(item.name)}</span>
+              <span class="item-time">${item.lastMessageTime || ''}</span>
+            </div>
+            <div class="item-subtitle">${escapeHtml(item.lastMessage || '')}</div>
+            <div class="badge-number-chip">${item.zangiNumber}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // CARREGAR CONTATOS
+    async function loadContactsTab() {
+      try {
+        const res = await fetch(`/api/contacts/${currentUser.id}`);
+        const data = await res.json();
+        if (data.success) {
+          renderContactsList(data.contacts);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderContactsList(contacts) {
+      if (currentTab !== 'contatos') return;
+      if (!contacts || contacts.length === 0) {
+        hubContentArea.innerHTML = `
+          <div style="text-align: center; padding: 40px 20px; color: var(--zangi-text-secondary);">
+            Você ainda não adicionou contatos.<br>
+            Toque em <b>+ Contato</b> para adicionar por Número Zangi.
+          </div>
+        `;
+        return;
+      }
+
+      hubContentArea.innerHTML = contacts.map(c => `
+        <div class="conversation-item" onclick="openChat('${c.id}', '${escapeHtml(c.nickname)}', '${c.zangiNumber}', false)">
+          <div class="item-avatar">${c.nickname.charAt(0).toUpperCase()}</div>
+          <div class="item-body">
+            <div class="item-header">
+              <span class="item-title">${escapeHtml(c.nickname)}</span>
+            </div>
+            <div class="badge-number-chip">Zangi: ${c.zangiNumber}</div>
+          </div>
+          <button class="btn-action-small" style="background: var(--zangi-green-primary); color: #fff;">Conversar</button>
+        </div>
+      `).join('');
+    }
+
+    // CARREGAR GRUPOS
+    async function loadGroupsTab() {
+      try {
+        const res = await fetch(`/api/conversations/${currentUser.id}`);
+        const data = await res.json();
+        if (data.success) {
+          const groupsOnly = (data.conversations || []).filter(c => c.isGroup);
+          renderGroupsList(groupsOnly);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderGroupsList(groups) {
+      if (currentTab !== 'grupos') return;
+      if (!groups || groups.length === 0) {
+        hubContentArea.innerHTML = `
+          <div style="text-align: center; padding: 40px 20px; color: var(--zangi-text-secondary);">
+            Você ainda não participa de grupos.<br>
+            Toque em <b>+ Grupo</b> para criar um novo grupo criptografado!
+          </div>
+        `;
+        return;
+      }
+
+      hubContentArea.innerHTML = groups.map(g => `
+        <div class="conversation-item" onclick="openChat('${g.id}', '${escapeHtml(g.name)}', '${g.zangiNumber}', true)">
+          <div class="item-avatar group-avatar">🛡️</div>
+          <div class="item-body">
+            <div class="item-header">
+              <span class="item-title">${escapeHtml(g.name)}</span>
+              <span class="item-time">${g.lastMessageTime || ''}</span>
+            </div>
+            <div class="item-subtitle">${g.memberCount || 2} membros</div>
+            <div class="badge-number-chip">${g.zangiNumber}</div>
+          </div>
+          <button class="btn-action-small" style="background: var(--zangi-green-primary); color: #fff;">Abrir</button>
+        </div>
+      `).join('');
+    }
+
+    // ========================================================
+    // MODAL: ADICIONAR CONTATO POR NÚMERO
+    // ========================================================
+    btnOpenAddContact.addEventListener('click', () => {
+      inputSearchContactNumber.value = '';
+      modalAddContact.classList.add('active');
+    });
+
+    btnCancelAddContact.addEventListener('click', () => {
+      modalAddContact.classList.remove('active');
+    });
+
+    btnConfirmAddContact.addEventListener('click', async () => {
+      const number = inputSearchContactNumber.value.trim();
+      if (!number) {
+        alert('Digite o número Zangi do contato.');
+        return;
+      }
+
+      btnConfirmAddContact.disabled = true;
+      try {
+        const res = await fetch('/api/contacts/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            contactZangiNumber: number
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`✓ ${data.message}`);
+          modalAddContact.classList.remove('active');
+          loadCurrentTabData();
+        } else {
+          alert(data.message || 'Contato não encontrado.');
+        }
+      } catch (err) {
+        alert('Erro ao adicionar contato: ' + err.message);
+      } finally {
+        btnConfirmAddContact.disabled = false;
+      }
+    });
+
+    // ========================================================
+    // MODAL: CRIAR NOVO GRUPO
+    // ========================================================
+    btnOpenCreateGroup.addEventListener('click', async () => {
+      inputGroupName.value = '';
+      groupMembersSelectionList.innerHTML = 'Carregando contatos...';
+      modalCreateGroup.classList.add('active');
+
+      try {
+        const res = await fetch(`/api/contacts/${currentUser.id}`);
+        const data = await res.json();
+        if (data.success && data.contacts.length > 0) {
+          groupMembersSelectionList.innerHTML = data.contacts.map(c => `
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--zangi-text-primary); cursor: pointer;">
+              <input type="checkbox" value="${c.id}" class="group-member-checkbox" checked>
+              <span>${escapeHtml(c.nickname)} (${c.zangiNumber})</span>
+            </label>
+          `).join('');
+        } else {
+          groupMembersSelectionList.innerHTML = '<span style="font-size: 12px; color: var(--zangi-text-secondary);">Nenhum contato salvo ainda. Adicione contatos primeiro.</span>';
+        }
+      } catch (e) {
+        groupMembersSelectionList.innerHTML = 'Erro ao carregar contatos.';
+      }
+    });
+
+    btnCancelCreateGroup.addEventListener('click', () => {
+      modalCreateGroup.classList.remove('active');
+    });
+
+    btnConfirmCreateGroup.addEventListener('click', async () => {
+      const name = inputGroupName.value.trim();
+      if (!name) {
+        alert('Informe o nome do grupo.');
+        return;
+      }
+
+      const selectedMemberIds = Array.from(document.querySelectorAll('.group-member-checkbox:checked'))
+        .map(cb => cb.value);
+
+      btnConfirmCreateGroup.disabled = true;
+      try {
+        const res = await fetch('/api/groups/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            creatorId: currentUser.id,
+            memberIds: selectedMemberIds
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`✓ Grupo "${data.group.name}" criado com sucesso!`);
+          modalCreateGroup.classList.remove('active');
+          loadCurrentTabData();
+        } else {
+          alert(data.message || 'Erro ao criar grupo.');
+        }
+      } catch (e) {
+        alert('Erro: ' + e.message);
+      } finally {
+        btnConfirmCreateGroup.disabled = false;
+      }
+    });
+
+    // ========================================================
+    // MODAL: ENTRAR EM GRUPO POR LINK / CÓDIGO
+    // ========================================================
+    if (btnOpenJoinGroupByLink) {
+      btnOpenJoinGroupByLink.addEventListener('click', () => {
+        modalCreateGroup.classList.remove('active');
+        inputJoinGroupCode.value = '';
+        modalJoinGroup.classList.add('active');
+      });
+    }
+
+    if (btnCancelJoinGroup) {
+      btnCancelJoinGroup.addEventListener('click', () => {
+        modalJoinGroup.classList.remove('active');
+      });
+    }
+
+    if (btnConfirmJoinGroup) {
+      btnConfirmJoinGroup.addEventListener('click', async () => {
+        const rawInput = inputJoinGroupCode.value.trim();
+        if (!rawInput) {
+          alert('Cole o link ou digite o código/número do grupo.');
+          return;
+        }
+
+        let groupId = rawInput;
+        if (groupId.includes('zangi://group/join/')) {
+          groupId = groupId.replace('zangi://group/join/', '').trim();
+        } else if (groupId.includes('/join/')) {
+          const parts = groupId.split('/join/');
+          groupId = parts[parts.length - 1].trim();
+        }
+
+        btnConfirmJoinGroup.disabled = true;
+        try {
+          const res = await fetch(`/api/groups/${encodeURIComponent(groupId)}/join-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: currentUser.id })
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert(`✓ ${data.message}`);
+            modalJoinGroup.classList.remove('active');
+            loadCurrentTabData();
+          } else {
+            alert(data.message || 'Erro ao solicitar entrada no grupo.');
+          }
+        } catch (err) {
+          alert('Erro na solicitação: ' + err.message);
+        } finally {
+          btnConfirmJoinGroup.disabled = false;
+        }
+      });
+    }
+
+    // ========================================================
+    // MODAL: DETALHES DO GRUPO (MEMBROS, LINK E APROVAÇÃO DO DONO)
+    // ========================================================
+    let currentActiveGroupDetails = null;
+
+    async function openGroupInfoModal(groupId) {
+      if (!currentUser) return;
+      try {
+        const res = await fetch(`/api/groups/${groupId}/details?userId=${currentUser.id}`);
+        const data = await res.json();
+        if (!data.success || !data.group) {
+          alert(data.message || 'Não foi possível carregar as informações do grupo.');
+          return;
+        }
+
+        currentActiveGroupDetails = data.group;
+        groupInfoModalTitle.innerText = data.group.name;
+        groupInfoModalNumber.innerText = data.group.zangiNumber;
+        groupInfoModalOwner.innerText = data.group.isOwner 
+          ? '👑 Dono: Você (Administrador)' 
+          : `👑 Dono: ${data.group.ownerName || 'Administrador'}`;
+
+        // Renderiza lista de membros atuais
+        webGroupMembersCount.innerText = `Membros Atuais (${data.group.members.length}):`;
+        webGroupMembersList.innerHTML = data.group.members.map(m => {
+          const isOwner = m.id === data.group.creatorId;
+          return `
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: #1F2C34; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--zangi-green-primary);">
+                  ${m.nickname.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 600; color: #fff;">${escapeHtml(m.nickname)} ${isOwner ? '<span style="color: #FFD700; font-size: 10px;">👑 Dono</span>' : ''}</div>
+                  <div style="font-size: 10px; color: var(--zangi-text-secondary);">${m.zangiNumber}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Se for dono e houver pendentes, exibe área de aprovação
+        if (data.group.isOwner && data.group.pendingMembers && data.group.pendingMembers.length > 0) {
+          webPendingRequestsSection.style.display = 'block';
+          webPendingMembersContainer.innerHTML = data.group.pendingMembers.map(p => `
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0, 230, 118, 0.06); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(0, 230, 118, 0.2);">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: #fff;">${escapeHtml(p.nickname)}</div>
+                <div style="font-size: 10px; color: var(--zangi-green-primary);">${p.zangiNumber}</div>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn-approve-join" data-id="${p.id}" style="background: var(--zangi-green-primary); border: none; color: #000; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Aprovar</button>
+                <button class="btn-reject-join" data-id="${p.id}" style="background: rgba(255,255,255,0.1); border: none; color: #ff5252; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">Recusar</button>
+              </div>
+            </div>
+          `).join('');
+
+          // Bind botões de aprovar / recusar
+          webPendingMembersContainer.querySelectorAll('.btn-approve-join').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const targetUserId = btn.dataset.id;
+              await handleApproveMember(groupId, targetUserId, true);
+            });
+          });
+          webPendingMembersContainer.querySelectorAll('.btn-reject-join').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const targetUserId = btn.dataset.id;
+              await handleApproveMember(groupId, targetUserId, false);
+            });
+          });
+        } else {
+          webPendingRequestsSection.style.display = 'none';
+          webPendingMembersContainer.innerHTML = '';
+        }
+
+        modalGroupInfo.classList.add('active');
+      } catch (err) {
+        alert('Erro ao carregar dados do grupo: ' + err.message);
+      }
+    }
+
+    async function handleApproveMember(groupId, targetUserId, approve) {
+      try {
+        const res = await fetch(`/api/groups/${groupId}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ownerId: currentUser.id,
+            targetUserId: targetUserId,
+            approve: approve
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`✓ ${data.message}`);
+          openGroupInfoModal(groupId);
+          loadChatMessages();
+        } else {
+          alert(data.message || 'Erro ao processar aprovação.');
+        }
+      } catch (err) {
+        alert('Erro ao processar aprovação: ' + err.message);
+      }
+    }
+
+    if (btnCloseGroupInfoModal) {
+      btnCloseGroupInfoModal.addEventListener('click', () => {
+        modalGroupInfo.classList.remove('active');
+      });
+    }
+
+    if (btnWebCopyGroupLink) {
+      btnWebCopyGroupLink.addEventListener('click', () => {
+        if (!currentActiveGroupDetails) return;
+        const link = currentActiveGroupDetails.inviteLink || `zangi://group/join/${currentActiveGroupDetails.id}`;
+        const copyText = `${link} (Código: ${currentActiveGroupDetails.zangiNumber})`;
+        navigator.clipboard.writeText(copyText).then(() => {
+          alert(`✓ Link e Código copiados para a área de transferência!\n\n${copyText}\n\nEnvie para quem deseja entrar no grupo.`);
+        }).catch(() => {
+          prompt('Copie o link do grupo:', copyText);
+        });
+      });
+    }
+
+    if (btnWebAddGroupMember) {
+      btnWebAddGroupMember.addEventListener('click', async () => {
+        if (!currentActiveGroupDetails) return;
+        const userInput = prompt('Digite o Número Zangi Privado (10 dígitos) ou Nick do usuário para adicionar diretamente ao grupo:');
+        if (!userInput || !userInput.trim()) return;
+
+        try {
+          const res = await fetch(`/api/groups/${currentActiveGroupDetails.id}/members/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              requesterId: currentUser.id,
+              userZangiNumber: userInput.trim()
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert(`✓ ${data.message}`);
+            openGroupInfoModal(currentActiveGroupDetails.id);
+            loadChatMessages();
+          } else {
+            alert(data.message || 'Erro ao adicionar membro.');
+          }
+        } catch (err) {
+          alert('Erro ao adicionar membro: ' + err.message);
+        }
+      });
+    }
+
+    // ========================================================
+    // TELA DE CHAT
+    // ========================================================
+    function openChat(id, title, zangiNumber, isGroup) {
+      currentConversation = { id, title, zangiNumber, isGroup };
+      switchScreen(viewChat);
+
+      chatHeaderTitle.innerText = title;
+      chatHeaderSubtitle.innerText = `${zangiNumber} • ${isGroup ? 'Grupo (Toque para Gerenciar)' : 'Online'}`;
+      chatHeaderAvatar.innerText = isGroup ? '🛡️' : title.charAt(0).toUpperCase();
+      if (isGroup) {
+        chatHeaderAvatar.classList.add('group-avatar');
+        chatHeaderTitle.style.cursor = 'pointer';
+        chatHeaderAvatar.style.cursor = 'pointer';
+        chatHeaderTitle.onclick = () => openGroupInfoModal(id);
+        chatHeaderAvatar.onclick = () => openGroupInfoModal(id);
+      } else {
+        chatHeaderAvatar.classList.remove('group-avatar');
+        chatHeaderTitle.style.cursor = 'default';
+        chatHeaderAvatar.style.cursor = 'default';
+        chatHeaderTitle.onclick = null;
+        chatHeaderAvatar.onclick = null;
+      }
+
+      chatStreamArea.innerHTML = '';
+      loadChatMessages();
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(loadChatMessages, 2000);
+    }
+
+    btnBackToHub.addEventListener('click', () => {
+      currentConversation = null;
+      showHub();
+    });
+
+    async function loadChatMessages() {
+      if (!currentConversation || !currentUser) return;
+      try {
+        const res = await fetch(`/api/messages/${currentConversation.id}?userId=${currentUser.id}`);
+        const data = await res.json();
+        if (data.success) {
+          renderMessages(data.messages);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderMessages(messages) {
+      if (!messages) return;
+      const isAtBottom = chatStreamArea.scrollHeight - chatStreamArea.scrollTop <= chatStreamArea.clientHeight + 50;
+
+      chatStreamArea.innerHTML = messages.map(m => {
+        const isMe = m.senderId === currentUser.id;
+        let badgeHtml = '';
+        if (m.type === 'FOTO_CAMERA') {
+          badgeHtml = '<div class="badge-capture-type">📸 FOTO DA CÂMERA</div>';
+        } else if (m.type === 'CAPTURA_TELA') {
+          badgeHtml = '<div class="badge-capture-type">🖥️ CAPTURA DE TELA</div>';
+        }
+
+        let mediaHtml = '';
+        if (m.file && m.file.url) {
+          mediaHtml = `<img src="${m.file.url}" class="media-preview-img" alt="Mídia">`;
+        }
+
+        let senderLabel = '';
+        if (!isMe && currentConversation.isGroup) {
+          senderLabel = `<div class="msg-sender-name">${escapeHtml(m.senderName)}</div>`;
+        }
+
+        return `
+          <div class="message-row ${isMe ? 'sent' : 'received'}">
+            <div class="message-bubble">
+              ${senderLabel}
+              ${badgeHtml}
+              ${mediaHtml}
+              ${m.text ? `<div class="message-text">${escapeHtml(m.text)}</div>` : ''}
+              <div class="message-footer">
+                <span>${m.timestamp}</span>
+                ${isMe ? '<span style="color: var(--zangi-green-light)">✓✓</span>' : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (isAtBottom) {
+        chatStreamArea.scrollTop = chatStreamArea.scrollHeight;
+      }
+    }
+
+    // ENVIAR TEXTO
+    async function sendChatTextMessage() {
+      const text = chatInputText.value.trim();
+      if (!text || !currentConversation || !currentUser) return;
+
+      chatInputText.value = '';
+
+      try {
+        await fetch('/api/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: currentConversation.id,
+            senderId: currentUser.id,
+            senderName: currentUser.nickname,
+            senderZangiNumber: currentUser.zangiNumber,
+            text: text
+          })
+        });
+        loadChatMessages();
+      } catch (e) {
+        alert('Erro ao enviar mensagem: ' + e.message);
+      }
+    }
+
+    btnChatSend.addEventListener('click', sendChatTextMessage);
+    chatInputText.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendChatTextMessage();
+    });
+
+    // MÓDULO 1: CÂMERA
+    btnChatCamera.addEventListener('click', async () => {
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.play();
+
+          setTimeout(() => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            stream.getTracks().forEach(t => t.stop());
+
+            canvas.toBlob((blob) => {
+              const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
+              uploadChatMedia(file, "Foto capturada da câmera", "FOTO_CAMERA");
+            }, 'image/jpeg', 0.9);
+          }, 800);
+        } else {
+          webCamFileInput.click();
+        }
+      } catch (e) {
+        webCamFileInput.click();
+      }
+    });
+
+    webCamFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        uploadChatMedia(file, "Foto enviada da câmera", "FOTO_CAMERA");
+      }
+    });
+
+    // MÓDULO 2: CAPTURA DE TELA
+    btnChatScreen.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: "always" },
+          audio: false
+        });
+
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+
+        setTimeout(() => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+          stream.getTracks().forEach(track => track.stop());
+
+          canvas.toBlob((blob) => {
+            const file = new File([blob], `screenshot_${Date.now()}.png`, { type: 'image/png' });
+            uploadChatMedia(file, "Captura de tela realizada", "CAPTURA_TELA");
+          }, 'image/png');
+        }, 500);
+
+      } catch (err) {
+        console.log("Captura cancelada", err);
+      }
+    });
+
+    // UPLOAD MULTIPART
+    async function uploadChatMedia(file, textCaption, type) {
+      if (!currentConversation || !currentUser) return;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('text', textCaption);
+      formData.append('senderId', currentUser.id);
+      formData.append('senderName', currentUser.nickname);
+      formData.append('senderZangiNumber', currentUser.zangiNumber);
+      formData.append('conversationId', currentConversation.id);
+      formData.append('type', type);
+
+      try {
+        await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        loadChatMessages();
+      } catch (e) {
+        alert('Erro no upload: ' + e.message);
+      }
+    }
+
+    // MÓDULO GALERIA DE FOTOS
+    const btnChatGallery = document.getElementById('btnChatGallery');
+    const galleryFileInput = document.getElementById('galleryFileInput');
+    if (btnChatGallery && galleryFileInput) {
+      btnChatGallery.addEventListener('click', () => {
+        galleryFileInput.click();
+      });
+      galleryFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          uploadChatMedia(file, "Imagem compartilhada", "IMAGEM");
+          galleryFileInput.value = '';
+        }
+      });
+    }
+
+    // MODAL DE PERFIL DO USUÁRIO
+    const modalUserProfile = document.getElementById('modalUserProfile');
+    const btnCloseProfileModal = document.getElementById('btnCloseProfileModal');
+    const btnChangeAvatarPhoto = document.getElementById('btnChangeAvatarPhoto');
+    const avatarFileInput = document.getElementById('avatarFileInput');
+    const hubUserAvatar = document.getElementById('hubUserAvatar');
+
+    function openUserProfileModal() {
+      if (!currentUser) return;
+      document.getElementById('profileModalNick').innerText = currentUser.nickname;
+      document.getElementById('profileModalNumber').innerText = currentUser.zangiNumber;
+      
+      const avatarContainer = document.getElementById('profileModalAvatarImg');
+      if (currentUser.avatarUrl) {
+        avatarContainer.innerHTML = `<img src="${currentUser.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        avatarContainer.innerText = currentUser.nickname.charAt(0).toUpperCase();
+      }
+      modalUserProfile.classList.add('active');
+    }
+
+    if (hubUserAvatar) {
+      hubUserAvatar.style.cursor = 'pointer';
+      hubUserAvatar.addEventListener('click', openUserProfileModal);
+    }
+
+    if (btnCloseProfileModal) {
+      btnCloseProfileModal.addEventListener('click', () => {
+        modalUserProfile.classList.remove('active');
+      });
+    }
+
+    if (btnChangeAvatarPhoto && avatarFileInput) {
+      btnChangeAvatarPhoto.addEventListener('click', () => {
+        avatarFileInput.click();
+      });
+      avatarFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file && currentUser) {
+          const formData = new FormData();
+          formData.append('avatar', file);
+          try {
+            const res = await fetch(`/api/users/${currentUser.id}/avatar`, {
+              method: 'POST',
+              body: formData
+            });
+            const data = await res.json();
+            if (data.success && data.avatarUrl) {
+              currentUser.avatarUrl = data.avatarUrl;
+              localStorage.setItem('zangi_user', JSON.stringify(currentUser));
+              
+              document.getElementById('profileModalAvatarImg').innerHTML = `<img src="${data.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+              if (hubUserAvatar) {
+                hubUserAvatar.innerHTML = `<img src="${data.avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+              }
+              alert('✓ Foto de perfil atualizada com sucesso!');
+            }
+          } catch (err) {
+            alert('Erro ao atualizar foto: ' + err.message);
+          }
+        }
+      });
+    }
+
+    // MODAL DE VISUALIZAÇÃO EM TELA CHEIA
+    const modalImageViewer = document.getElementById('modalImageViewer');
+    const fullImageViewerImg = document.getElementById('fullImageViewerImg');
+    const btnCloseImageViewer = document.getElementById('btnCloseImageViewer');
+
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.classList.contains('media-preview-img')) {
+        fullImageViewerImg.src = e.target.src;
+        modalImageViewer.classList.add('active');
+      }
+    });
+
+    if (btnCloseImageViewer) {
+      btnCloseImageViewer.addEventListener('click', () => {
+        modalImageViewer.classList.remove('active');
+      });
+    }
+
+    // EFEITOS SONOROS NATIVOS VIA WEB AUDIO
+    function playChatSound(type) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        if (type === 'send') {
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.08);
+        } else {
+          osc.frequency.setValueAtTime(660, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(520, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        }
+      } catch (err) {}
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

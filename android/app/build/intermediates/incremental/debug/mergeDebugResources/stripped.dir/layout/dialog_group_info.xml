@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_modern"
+    android:orientation="vertical"
+    android:padding="22dp">
+
+    <!-- Cabeçalho do Grupo -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_badge_private">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="🛡️"
+                android:textSize="26sp" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvGroupInfoName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/zangi_white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="Equipe Zangi" />
+
+            <TextView
+                android:id="@+id/tvGroupInfoNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/zangi_green_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="10-GRP-8912" />
+
+            <TextView
+                android:id="@+id/tvGroupInfoOwner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/zangi_text_secondary"
+                android:textSize="11sp"
+                tools:text="👑 Dono: Você" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Barra de Ações Rápidas: Copiar Link e Adicionar Membro -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnGroupCopyInviteLink"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_badge_private"
+            android:text="🔗 Copiar Link"
+            android:textColor="@color/zangi_green_primary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnGroupAddMember"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_btn_send"
+            android:stateListAnimator="@null"
+            android:text="+ Adicionar"
+            android:textColor="@color/zangi_white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- SEÇÃO 1: SOLICITAÇÕES PENDENTES DE ENTRADA (APROVAÇÃO DO DONO) -->
+    <LinearLayout
+        android:id="@+id/sectionPendingRequests"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/tvPendingRequestsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔔 Pedidos de Entrada (Aprovação do Dono):"
+            android:textColor="@color/zangi_green_light"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/containerPendingMembers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical" />
+    </LinearLayout>
+
+    <!-- SEÇÃO 2: MEMBROS DO GRUPO -->
+    <TextView
+        android:id="@+id/tvMembersCountTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Membros do Grupo:"
+        android:textColor="@color/zangi_text_secondary"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:maxHeight="160dp">
+
+        <LinearLayout
+            android:id="@+id/containerGroupMembers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <!-- Botão Fechar -->
+    <Button
+        android:id="@+id/btnDialogCloseGroupInfo"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_badge_private"
+        android:stateListAnimator="@null"
+        android:text="Fechar"
+        android:textColor="@color/zangi_text_secondary"
+        android:textSize="13sp" />
+
+</LinearLayout>

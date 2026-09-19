@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta Zangi Cyber Emerald Ultra-Moderna -->
+    <color name="zangi_green_primary">#00E676</color>
+    <color name="zangi_green_main">#00C853</color>
+    <color name="zangi_green_dark">#054640</color>
+    <color name="zangi_green_light">#69F0AE</color>
+    <color name="zangi_green_bubble">#005C4B</color>
+    <color name="zangi_green_bubble_end">#044337</color>
+    <color name="zangi_green_glow">#3300E676</color>
+
+    <!-- Fundo Deep Space e Superfícies Glassmorphism -->
+    <color name="zangi_bg_dark">#080E11</color>
+    <color name="zangi_header_dark">#0E161B</color>
+    <color name="zangi_surface_dark">#131D24</color>
+    <color name="zangi_surface_card">#18252E</color>
+    <color name="zangi_surface_elevated">#1E2E38</color>
+    <color name="zangi_border">#243642</color>
+    <color name="zangi_border_glow">#4D00E676</color>
+    
+    <!-- Tipografia e Contrastes -->
+    <color name="zangi_white">#FFFFFF</color>
+    <color name="zangi_text_primary">#F1F5F9</color>
+    <color name="zangi_text_secondary">#94A3B8</color>
+    <color name="zangi_text_muted">#64748B</color>
+    
+    <!-- Cores de Status -->
+    <color name="zangi_check_green">#00E676</color>
+    <color name="zangi_status_online">#00E676</color>
+    <color name="zangi_error">#FF5252</color>
+
+    <!-- Barra de Entrada e Botões -->
+    <color name="zangi_input_bg">#141E24</color>
+    <color name="zangi_icon_tint">#94A3B8</color>
+    <color name="zangi_icon_active">#00E676</color>
+    <color name="zangi_green_accent">#00E676</color>
+
+    <!-- Modais e Diálogos Cyber Emerald -->
+    <color name="zangi_dialog_bg">#111C23</color>
+    <color name="zangi_dialog_surface">#16242D</color>
+    <color name="zangi_dialog_border">#223744</color>
+    <color name="zangi_overlay_dark">#D9000000</color>
+</resources>

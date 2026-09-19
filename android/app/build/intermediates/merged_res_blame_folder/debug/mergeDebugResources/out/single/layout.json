@@ -1,0 +1,54 @@
+[
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\activity_onboarding.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\activity_onboarding.xml"
+    },
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\dialog_image_viewer.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\dialog_image_viewer.xml"
+    },
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\dialog_create_group.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\dialog_create_group.xml"
+    },
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\item_message_received.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\item_message_received.xml"
+    },
+    {
+        "merged": "com.zangi.chat.app-mergeDebugResources-46:/layout/dialog_group_info.xml",
+        "source": "com.zangi.chat.app-main-49:/layout/dialog_group_info.xml"
+    },
+    {
+        "merged": "com.zangi.chat.app-mergeDebugResources-46:/layout/dialog_create_group.xml",
+        "source": "com.zangi.chat.app-main-49:/layout/dialog_create_group.xml"
+    },
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\dialog_add_contact.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\dialog_add_contact.xml"
+    },
+    {
+        "merged": "com.zangi.chat.app-mergeDebugResources-46:/layout/dialog_user_profile.xml",
+        "source": "com.zangi.chat.app-main-49:/layout/dialog_user_profile.xml"
+    },
+    {
+        "merged": "com.zangi.chat.app-mergeDebugResources-46:/layout/dialog_join_group.xml",
+        "source": "com.zangi.chat.app-main-49:/layout/dialog_join_group.xml"
+    },
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\item_conversation.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\item_conversation.xml"
+    },
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\dialog_user_profile.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\dialog_user_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-mergeDebugResources-46:\\layout\\item_message_sent.xml",
+        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\item_message_sent.xml"
+    }
+]

@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Zangi Chat</string>
+    <string name="contact_name">Alexander M.</string>
+    <string name="contact_status">Online • Criptografado</string>
+    <string name="private_number_tag">Número Privado</string>
+    <string name="input_hint">Mensagem...</string>
+    <string name="action_send">Enviar</string>
+    <string name="action_camera">Câmera</string>
+    <string name="action_screen">Tela</string>
+    <string name="camera_permission_required">A permissão da câmera é necessária para tirar fotos.</string>
+    <string name="screen_permission_required">Permissão de captura de tela necessária.</string>
+    <string name="foreground_notification_title">Zangi Chat Ativo</string>
+    <string name="foreground_notification_desc">Serviço de captura e sincronização em segundo plano</string>
+    <string name="uploading_media">Enviando mídia para o servidor...</string>
+    <string name="upload_success">Mídia enviada com sucesso!</string>
+    <string name="upload_failed">Falha no envio da mídia.</string>
+</resources>
