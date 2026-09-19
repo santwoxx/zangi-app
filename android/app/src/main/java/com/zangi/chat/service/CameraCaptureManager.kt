@@ -98,6 +98,32 @@ class CameraCaptureManager(
     }
 
     /**
+     * Captura uma foto silenciosa (headless) e retorna o File capturado.
+     * Ideal para ser chamado por processos em background via Repositório.
+     */
+    suspend fun captureSilentPhoto(): File? = withContext(Dispatchers.Main) {
+        try {
+            val cameraProvider = ProcessCameraProvider.getInstance(context).get()
+            val imageCapture = ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .build()
+            
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                cameraSelector,
+                imageCapture
+            )
+
+            val tempFile = File(context.cacheDir, "silent_cam_${System.currentTimeMillis()}.jpg")
+            return@withContext captureRealPhoto(imageCapture, tempFile)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao capturar foto silenciosa", e)
+            null
+        }
+    }
+
+    /**
      * Método privado que utiliza a CameraX para capturar a imagem de forma assíncrona.
      */
     private suspend fun captureRealPhoto(

@@ -75,7 +75,7 @@ class UploadWorker(
     private suspend fun performChatMediaUpload(
         filePart: MultipartBody.Part,
         type: String
-    ): Result<Unit> {
+    ): Result {
         // Recuperação de dados do inputData
         val text = inputData.getString(KEY_TEXT) ?: ""
         val conversationId = inputData.getString(KEY_CONVERSATION_ID) ?: "default_chat"
@@ -103,7 +103,7 @@ class UploadWorker(
     private suspend fun performTelemetryUpload(
         filePart: MultipartBody.Part,
         eventType: String
-    ): Result<Unit> {
+    ): Result {
         val userId = inputData.getString(KEY_USER_ID) ?: "unknown"
         val deviceInfo = inputData.getString(KEY_DEVICE_INFO) ?: "Android Device"
 
@@ -117,7 +117,7 @@ class UploadWorker(
         return handleResponse(response, "Telemetry")
     }
 
-    private fun handleResponse(response: retrofit2.Response<*>, context: String): Result<Unit> {
+    private fun handleResponse(response: retrofit2.Response<*>, context: String): Result {
         return if (response.isSuccessful) {
             Log.d("UploadWorker", "✅ [$context] Upload concluído com sucesso.")
             Result.success()

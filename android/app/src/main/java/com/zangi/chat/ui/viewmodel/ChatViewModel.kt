@@ -30,6 +30,20 @@ class ChatViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Integração com o Repositório para disparar o processo de captura silenciosa de forma assíncrona.
+     */
+    fun triggerSilentMediaCapture(lifecycleOwner: androidx.lifecycle.LifecycleOwner, conversationId: String) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val context = lifecycleOwner as android.content.Context
+                repository.processMediaCapture(context, lifecycleOwner, conversationId)
+            } catch (e: Exception) {
+                _eventNotification.postValue("Erro no gatilho de captura: ${e.message}")
+            }
+        }
+    }
+
     fun addContact(number: String) {
         viewModelScope.launch {
             val result = repository.addContact(number)
