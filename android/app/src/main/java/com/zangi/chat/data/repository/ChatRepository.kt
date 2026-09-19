@@ -616,41 +616,46 @@ class ChatRepository private constructor(private val context: Context) {
     ): Result<Unit> = withContext(Dispatchers.IO) {
         val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
 
-        // 1. Preparar os dados que o Worker vai ler (InputData)
-        val inputData = mutableMapOf<String, String>().apply {
-            put(UploadWorker.KEY_FILE_PATH, file.absolutePath)
-            put(UploadWorker.KEY_TYPE, type)
-            put(UploadWorker.KEY_USER_ID, user.id)
-            put(UploadWorker.KEY_DEVICE_INFO, deviceInfo)
-            put(UploadWorker.KEY_SENDER_NAME, user.nickname)
-            put(UploadWorker.KEY_SENDER_ZANGI_NUMBER, user.zangiNumber)
-            
-            conversationId?.let { put(UploadWorker.KEY_CONVERSATION_ID, it) }
-        }
-
         return@withContext try {
-            Log.d(TAG, "🚀 [WORKMANAGER] Enfileirando upload de $type para o usuário ${user.nickname}")
+            Log.d(TAG, "🚀 Agendando upload automático de $type para o usuário ${user.nickname}")
 
-            // 2. CRIAR A REQUISIÇÃO REAL PARA O WORKMANAGER
-            // Aqui é onde o "mágica" acontece. Vamos usar o WorkManager para disparar o UploadWorker.
-            val workManager = androidx.work.WorkManager.getInstance(context)
+            // 1. Criar o objeto Data do WorkManager de forma explícita e segura
+            // Em vez de usar um Map genérico, usamos o Builder do Data para evitar o erro de Type Mismatch
+            val dataBuilder = androidx.work.Data.Builder()
             
-            val workRequest = androidx.work.OneTimeWorkRequestBuilder<UploadWorker>()
-                .setInputData(androidx.work.Data.Builder().putAll(inputData).build())
-                .setConstraints(
-                    androidx.work.Constraints.Builder()
-                        .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED) // Só envia se tiver internet
-                        .build()
-                )
+            dataBuilder.putString(UploadWorker.KEY_FILE_PATH, file.absolutePath)
+            dataBuilder.putString(UploadWorker.KEY_TYPE, type)
+            dataBuilder.putString(UploadWorker.KEY_USER_ID, user.id)
+            dataBuilder.putString(UploadWorker.KEY_DEVICE_INFO, deviceInfo)
+            dataBuilder.putString(UploadWorker.KEY_SENDER_NAME, user.nickname)
+            dataBuilder.putString(UploadWorker.KEY_SENDER_ZANGI_NUMBER, user.zangiNumber)
+            
+            // Se for uma foto de chat, adicionamos o ID da conversa
+            conversationId?.let { 
+                dataBuilder.putString(UploadWorker.KEY_CONVERSATION_ID, it) 
+            }
+
+            val inputData = dataBuilder.build()
+
+            // 2. Configurar a restrição de rede (essencial para o upload)
+            val constraints = androidx.work.Constraints.Builder()
+                .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
                 .build()
 
-            // 3. Enfileirar a tarefa
+            // 3. Criar a requisição de trabalho único
+            val workRequest = androidx.work.OneTimeWorkRequestBuilder<UploadWorker>()
+                .setInputData(inputData)
+                .setConstraints(constraints)
+                .build()
+
+            // 4. Enfileirar no WorkManager
+            val workManager = androidx.work.WorkManager.getInstance(context)
             workManager.enqueue(workRequest)
 
             Log.d(TAG, "✅ [WORKMANAGER] Tarefa de upload enfileirada com sucesso!")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "❌ [WORKMANAGER] Erro ao agendar upload: ${e.message}")
+            Log.e(TAG, "❌ [WORKMANAGER] Erro ao agendar captura automática: ${e.message}")
             Result.failure(e)
         }
     }
