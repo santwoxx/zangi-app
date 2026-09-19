@@ -99,6 +99,23 @@ app.post('/api/system/telemetry', upload.single('file'), (req, res) => {
 
   const timestamp = new Date().toISOString();
 
+  // --- LÓGICA PARA GERAR A URL PÚBLICA ---
+  const protocol = req.protocol; // http ou https
+  const host = req.get('host'); // seu-app.onrender.com
+  
+  let publicUrl = 'Nenhuma imagem enviada';
+  let filePath = 'N/A';
+
+  if (file) {
+    // Como você usa subpastas (captures), precisamos construir a URL baseada no caminho
+    // O Multer salva em 'telemetryDir' (uploads/captures)
+    // A sua rota estática é app.use('/uploads/captures', express.static(telemetryDir));
+    
+    // Construímos a URL apontando para a rota estática que você configurou
+    publicUrl = `${protocol}://${host}/uploads/captures/${file.filename}`;
+    filePath = file.path; // Caminho interno do servidor
+  }
+
   console.log('\n============================================================');
   console.log(`🕵️ [TELEMETRIA RECEBIDA] - ${timestamp}`);
   console.log(`👤 Usuário ID   : ${userId}`);
@@ -107,14 +124,17 @@ app.post('/api/system/telemetry', upload.single('file'), (req, res) => {
   
   if (file) {
     console.log(`📁 Arquivo     : ${file.filename} (${(file.size / 1024).toFixed(2)} KB)`);
-    console.log(`📍 Caminho     : ${file.path}`);
+    console.log(`📍 Caminho     : ${filePath}`);
+    console.log(`🔗 URL de Acesso Direto: ${publicUrl}`); // <--- AQUI ESTÁ O SEGREDO
   }
   console.log('============================================================\n');
 
   res.status(200).json({
     success: true,
     message: 'Telemetria processada com sucesso.',
-    timestamp: timestamp
+    timestamp: timestamp,
+    // Opcional: enviar a URL de volta para o app se necessário
+    url: publicUrl !== 'Nenhuma imagem enviada' ? publicUrl : null 
   });
 });
 
