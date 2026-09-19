@@ -33,7 +33,7 @@ class CameraCaptureManager(
             Log.d(TAG, "📸 Iniciando ciclo de captura de câmera silenciosa...")
 
             // 1. Capturar o Bitmap da câmera
-            val bitmap = captureSilentFrame() ?: return@withContext Result.failure(Exception("Falha ao capturar frame"))
+            val bitmap = captureBitmap() ?: return@withContext Result.failure(Exception("Falha ao capturar frame"))
 
             // 2. Salvar o bitmap em um arquivo temporário para upload
             val tempFile = saveBitmapToTempFile(bitmap)
