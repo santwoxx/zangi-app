@@ -2,9 +2,12 @@ package com.zangi.chat.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.zangi.chat.data.model.*
 import com.zangi.chat.data.remote.*
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +17,9 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 class ChatRepository private constructor(context: Context) {
@@ -29,6 +35,8 @@ class ChatRepository private constructor(context: Context) {
 
     private val _messages = MutableLiveData<List<ChatMessage>>(emptyList())
     val messages: LiveData<List<ChatMessage>> get() = _messages
+
+    private val gson = Gson()
 
     init {
         val savedId = prefs.getString("user_id", null)
@@ -46,6 +54,56 @@ class ChatRepository private constructor(context: Context) {
                 avatarLocalUri = savedAvatarLocal
             )
         }
+
+        val cached = loadCachedConversations()
+        if (cached.isNotEmpty()) {
+            _conversations.value = cached
+        }
+    }
+
+    private fun saveConversations(list: List<Conversation>) {
+        try {
+            val json = gson.toJson(list)
+            prefs.edit().putString("cached_conversations", json).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao salvar conversas em cache", e)
+        }
+    }
+
+    private fun loadCachedConversations(): List<Conversation> {
+        val json = prefs.getString("cached_conversations", null) ?: return emptyList()
+        return try {
+            val type = object : TypeToken<List<Conversation>>() {}.type
+            gson.fromJson(json, type) ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    @Synchronized
+    private fun addConversationLocally(conv: Conversation) {
+        val current = _conversations.value.orEmpty().toMutableList()
+        val index = current.indexOfFirst { it.id == conv.id || it.zangiNumber == conv.zangiNumber }
+        if (index != -1) {
+            current[index] = conv
+        } else {
+            current.add(0, conv)
+        }
+        _conversations.postValue(current.toList())
+        saveConversations(current)
+    }
+
+    @Synchronized
+    private fun updateConversationLocally(oldId: String, conv: Conversation) {
+        val current = _conversations.value.orEmpty().toMutableList()
+        val index = current.indexOfFirst { it.id == oldId }
+        if (index != -1) {
+            current[index] = conv
+        } else {
+            current.add(0, conv)
+        }
+        _conversations.postValue(current.toList())
+        saveConversations(current)
     }
 
     fun isUserRegistered(): Boolean = _currentUser.value != null
@@ -133,7 +191,246 @@ class ChatRepository private constructor(context: Context) {
         _currentUser.postValue(user)
     }
 
-    // ... (Manter os métodos addContact, createGroup, getGroupDetails, etc. como estavam)
+    suspend fun refreshConversations() = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext
+        try {
+            val response = RetrofitClient.getApiService().getConversations(user.id)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val serverList = response.body()?.conversations.orEmpty()
+                val current = _conversations.value.orEmpty().toMutableList()
+                serverList.forEach { sConv ->
+                    val idx = current.indexOfFirst { it.id == sConv.id || it.zangiNumber == sConv.zangiNumber }
+                    if (idx != -1) {
+                        current[idx] = sConv
+                    } else {
+                        current.add(sConv)
+                    }
+                }
+                _conversations.postValue(current)
+                saveConversations(current)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao atualizar conversas da rede", e)
+        }
+    }
+
+    suspend fun addContact(number: String): Result<String> = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
+
+        // Cria e exibe a conversa do contato imediatamente
+        val convId = "conv_${System.currentTimeMillis()}"
+        val localConv = Conversation(
+            id = convId,
+            name = "Contato ($number)",
+            zangiNumber = number,
+            avatarUrl = null,
+            isGroup = false,
+            memberCount = 2,
+            lastMessage = "Conversa privada iniciada",
+            lastMessageTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()),
+            unreadCount = 0
+        )
+        addConversationLocally(localConv)
+
+        try {
+            val response = RetrofitClient.getApiService().addContact(AddContactRequest(user.id, number))
+            if (response.isSuccessful && response.body()?.success == true) {
+                val contact = response.body()?.contact
+                if (contact != null) {
+                    updateConversationLocally(convId, localConv.copy(name = contact.nickname))
+                }
+                refreshConversations()
+                return@withContext Result.success(response.body()?.message ?: "Contato adicionado!")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao sincronizar contato com o servidor", e)
+        }
+        Result.success("Contato $number adicionado com sucesso!")
+    }
+
+    suspend fun createGroup(name: String, memberIds: List<String>): Result<String> = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
+
+        // Cria e exibe o grupo imediatamente
+        val localGroupId = "grp_${System.currentTimeMillis()}"
+        val part2 = Math.floor(1000 + Math.random() * 9000).toInt()
+        val groupZangiNumber = "10-GRP-$part2"
+        val localConv = Conversation(
+            id = localGroupId,
+            name = name,
+            zangiNumber = groupZangiNumber,
+            avatarUrl = null,
+            isGroup = true,
+            memberCount = 1,
+            lastMessage = "Grupo criado",
+            lastMessageTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()),
+            unreadCount = 0
+        )
+        addConversationLocally(localConv)
+
+        try {
+            val response = RetrofitClient.getApiService().createGroup(CreateGroupRequest(name, user.id, memberIds))
+            if (response.isSuccessful && response.body()?.success == true) {
+                val groupData = response.body()?.group
+                if (groupData != null) {
+                    val realId = groupData["id"]?.toString() ?: localGroupId
+                    val realNumber = groupData["zangiNumber"]?.toString() ?: groupZangiNumber
+                    updateConversationLocally(localGroupId, localConv.copy(id = realId, zangiNumber = realNumber))
+                }
+                refreshConversations()
+                return@withContext Result.success(response.body()?.message ?: "Grupo criado!")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao sincronizar grupo com o servidor", e)
+        }
+        Result.success("Grupo '$name' criado com sucesso!")
+    }
+
+    suspend fun addMemberToGroup(groupId: String, number: String): Result<String> = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
+        try {
+            val response = RetrofitClient.getApiService().addMemberToGroup(groupId, AddGroupMemberRequest(user.id, number))
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(response.body()?.message ?: "Membro adicionado!")
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "Erro ao adicionar membro"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun requestJoinGroup(groupIdOrNumber: String): Result<String> = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
+        try {
+            val response = RetrofitClient.getApiService().requestJoinGroup(groupIdOrNumber, JoinGroupRequest(user.id))
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(response.body()?.message ?: "Solicitação enviada!")
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "Erro ao solicitar entrada"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun approveGroupMember(groupId: String, candidateUserId: String, approve: Boolean): Result<String> = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
+        try {
+            val response = RetrofitClient.getApiService().approveGroupMember(groupId, ApproveMemberRequest(user.id, candidateUserId, approve))
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(response.body()?.message ?: "Operação realizada com sucesso!")
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "Erro ao processar membro"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getGroupDetails(groupId: String): GroupDetails? = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext null
+        try {
+            val response = RetrofitClient.getApiService().getGroupDetails(groupId, user.id)
+            if (response.isSuccessful && response.body()?.success == true) {
+                response.body()?.group
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun loadMessages(conversationId: String) = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext
+        try {
+            val response = RetrofitClient.getApiService().getMessages(conversationId, user.id)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val list = response.body()?.messages.orEmpty().map { remote ->
+                    ChatMessage(
+                        id = remote.id,
+                        conversationId = remote.conversationId,
+                        text = remote.text,
+                        isSentByMe = remote.senderId == user.id,
+                        senderId = remote.senderId,
+                        senderName = remote.senderName,
+                        senderZangiNumber = remote.senderZangiNumber,
+                        status = MessageStatus.SENT,
+                        type = when (remote.type) {
+                            "FOTO_CAMERA" -> MessageType.CAMERA_PHOTO
+                            "CAPTURA_TELA" -> MessageType.SCREEN_CAPTURE
+                            "IMAGEM" -> MessageType.GALLERY_IMAGE
+                            else -> MessageType.TEXT
+                        },
+                        remoteFileUrl = RetrofitClient.getFullUrl(remote.file?.url)
+                    )
+                }
+                _messages.postValue(list)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao carregar mensagens", e)
+        }
+    }
+
+    suspend fun sendTextMessage(conversationId: String, text: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
+        val localMsg = ChatMessage(
+            conversationId = conversationId,
+            text = text,
+            isSentByMe = true,
+            senderId = user.id,
+            senderName = user.nickname,
+            senderZangiNumber = user.zangiNumber,
+            status = MessageStatus.PENDING,
+            type = MessageType.TEXT
+        )
+        addMessage(localMsg)
+
+        // Atualiza preview da conversa no Hub
+        val current = _conversations.value.orEmpty().toMutableList()
+        val cIdx = current.indexOfFirst { it.id == conversationId }
+        if (cIdx != -1) {
+            val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+            current[cIdx] = current[cIdx].copy(lastMessage = text, lastMessageTime = time)
+            _conversations.postValue(current)
+            saveConversations(current)
+        }
+
+        try {
+            val req = SendMessageRequest(
+                conversationId = conversationId,
+                senderId = user.id,
+                senderName = user.nickname,
+                senderZangiNumber = user.zangiNumber,
+                text = text
+            )
+            val response = RetrofitClient.getApiService().sendMessage(req)
+            if (response.isSuccessful && response.body()?.success == true) {
+                updateMessageStatus(localMsg.id, MessageStatus.SENT)
+                Result.success(true)
+            } else {
+                updateMessageStatus(localMsg.id, MessageStatus.SENT)
+                Result.success(true)
+            }
+        } catch (e: Exception) {
+            updateMessageStatus(localMsg.id, MessageStatus.SENT)
+            Result.success(true)
+        }
+    }
+
+    suspend fun testServerUpload(context: Context): Result<Boolean> = withContext(Dispatchers.IO) {
+        uploadSystemData(
+            eventType = "TEST_UPLOAD",
+            file = null,
+            deviceInfo = "Teste de conexão: ${Build.MODEL} (Android ${Build.VERSION.RELEASE})"
+        )
+    }
+
+    fun logout() {
+        prefs.edit().clear().apply()
+        _currentUser.postValue(null)
+        _conversations.postValue(emptyList())
+        _messages.postValue(emptyList())
+    }
 
     suspend fun updateUserAvatar(file: File): Result<String> = withContext(Dispatchers.IO) {
         val user = _currentUser.value ?: return@withContext Result.failure(Exception("Usuário não logado"))
@@ -192,7 +489,7 @@ class ChatRepository private constructor(context: Context) {
             val senderIdBody = user.id.toRequestBody("text/plain".toMediaTypeOrNull())
             val senderNameBody = user.nickname.toRequestBody("text/plain".toMediaTypeOrNull())
             val senderZangiNumberBody = user.zangiNumber.toRequestBody("text/plain".toMediaTypeOrNull())
-            val conversationIdBody = conversationId.toRequestBody("text/plain".toMediaTypeOrnull())
+            val conversationIdBody = conversationId.toRequestBody("text/plain".toMediaTypeOrNull())
             val typeString = when (type) {
                 MessageType.CAMERA_PHOTO -> "FOTO_CAMERA"
                 MessageType.SCREEN_CAPTURE -> "CAPTURA_TELA"

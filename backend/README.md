@@ -68,5 +68,5 @@ Retorna status de conexão e saúde da API.
    - **Build Command:** `npm install`
    - **Start Command:** `node server.js`
 6. Clique em **Create Web Service**.
-7. O Render fornecerá uma URL pública HTTPS (exemplo: `https://zangi-chat-backend.onrender.com`).
+7. O Render fornecerá uma URL pública HTTPS oficial: `https://zangi-app.onrender.com`.
 8. Cole essa URL no arquivo `RetrofitClient.kt` do app Android!

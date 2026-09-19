@@ -1,146 +1,138 @@
 [
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_screen_share.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_screen_share.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_bg_chat_wallpaper.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/bg_chat_wallpaper.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_dialog_create_group.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\dialog_create_group.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_dialog_join_group.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/dialog_join_group.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_bg_chat_input.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\bg_chat_input.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_item_message_sent.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/item_message_sent.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\anim_anim_message_pop.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\anim\\anim_message_pop.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_dialog_user_profile.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/dialog_user_profile.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_camera_edit.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_camera_edit.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_item_conversation.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/item_conversation.xml"
     },
     {
-        "merged": "com.zangi.chat.app-debug-47:/layout_dialog_group_info.xml.flat",
-        "source": "com.zangi.chat.app-main-49:/layout/dialog_group_info.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_bg_dialog_modern.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/bg_dialog_modern.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_activity_main.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\activity_main.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_gallery.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_gallery.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_arrow_back.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_arrow_back.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_videocall.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_videocall.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_item_message_received.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\item_message_received.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_bg_card_reveal.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/bg_card_reveal.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_activity_onboarding.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\activity_onboarding.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_bg_chat_input.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/bg_chat_input.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_bg_badge_private.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\bg_badge_private.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_arrow_back.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_arrow_back.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_dialog_add_contact.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\dialog_add_contact.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_check_double.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_check_double.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_gallery.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_gallery.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_dialog_create_group.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/dialog_create_group.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_bg_bubble_sent.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\bg_bubble_sent.xml"
+        "merged": "com.zangi.chat.app-debug-52:/anim_anim_scale_fade_in.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/anim/anim_scale_fade_in.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\anim_anim_scale_fade_in.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\anim\\anim_scale_fade_in.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_bg_bubble_sent.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/bg_bubble_sent.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_call.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_call.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_bg_bubble_received.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/bg_bubble_received.xml"
     },
     {
-        "merged": "com.zangi.chat.app-debug-47:/layout_dialog_user_profile.xml.flat",
-        "source": "com.zangi.chat.app-main-49:/layout/dialog_user_profile.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_dialog_add_contact.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/dialog_add_contact.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_dialog_image_viewer.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\dialog_image_viewer.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_bg_badge_private.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/bg_badge_private.xml"
     },
     {
-        "merged": "com.zangi.chat.app-debug-47:/layout_dialog_create_group.xml.flat",
-        "source": "com.zangi.chat.app-main-49:/layout/dialog_create_group.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_activity_onboarding.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/activity_onboarding.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_avatar_placeholder.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_avatar_placeholder.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_call.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_call.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_bg_card_reveal.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\bg_card_reveal.xml"
+        "merged": "com.zangi.chat.app-debug-52:/xml_file_paths.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/xml/file_paths.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_bg_btn_send.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\bg_btn_send.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_camera_edit.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_camera_edit.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_videocall.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_videocall.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_lock.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_lock.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_send.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_send.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_dialog_image_viewer.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/dialog_image_viewer.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_item_message_sent.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\item_message_sent.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_dialog_group_info.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/dialog_group_info.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_bg_bubble_received.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\bg_bubble_received.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_camera.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_camera.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_item_conversation.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\item_conversation.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_send.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_send.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_bg_chat_wallpaper.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\bg_chat_wallpaper.xml"
+        "merged": "com.zangi.chat.app-debug-52:/anim_anim_slide_up.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/anim/anim_slide_up.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\anim_anim_slide_up.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\anim\\anim_slide_up.xml"
+        "merged": "com.zangi.chat.app-debug-52:/anim_anim_message_pop.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/anim/anim_message_pop.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_lock.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_lock.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_screen_share.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_screen_share.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\layout_dialog_user_profile.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\layout\\dialog_user_profile.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_activity_main.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/activity_main.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_check_double.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_check_double.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_bg_btn_send.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/bg_btn_send.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\xml_file_paths.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\xml\\file_paths.xml"
+        "merged": "com.zangi.chat.app-debug-52:/layout_item_message_received.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/layout/item_message_received.xml"
     },
     {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_ic_camera.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\ic_camera.xml"
-    },
-    {
-        "merged": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-debug-47:\\drawable_bg_dialog_modern.xml.flat",
-        "source": "C:\\Users\\santw\\.gradle\\daemon\\8.9\\com.zangi.chat.app-main-49:\\drawable\\bg_dialog_modern.xml"
-    },
-    {
-        "merged": "com.zangi.chat.app-debug-47:/layout_dialog_join_group.xml.flat",
-        "source": "com.zangi.chat.app-main-49:/layout/dialog_join_group.xml"
+        "merged": "com.zangi.chat.app-debug-52:/drawable_ic_avatar_placeholder.xml.flat",
+        "source": "com.zangi.chat.app-main-54:/drawable/ic_avatar_placeholder.xml"
     }
 ]

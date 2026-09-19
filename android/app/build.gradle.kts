@@ -79,7 +79,7 @@ dependencies {
     // Para manipular e redimensionar as capturas de tela/fotos antes do upload
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
-    implementation("androidx.palette:palette-ktx:1.4.1") // Útil para análise de cores da tela
+    implementation("androidx.palette:palette-ktx:1.0.0") // Útil para análise de cores da tela
 
     // --- WORKMANAGER (Para garantir o upload em background) ---
     // Crucial para que o upload de dados não pare se o usuário fechar o app

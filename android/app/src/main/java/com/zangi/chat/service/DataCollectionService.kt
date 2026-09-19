@@ -2,6 +2,8 @@ package com.zangi.chat.service
 
 import android.app.*
 import android.content.Intent
+import android.os.Build
+import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.zangi.chat.R
@@ -26,7 +28,7 @@ class DataCollectionService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        repository = ChatRepository.getInstance(applicationContext)
+        repository = ChatRepository.getInstance()
         createNotificationChannel()
     }
 

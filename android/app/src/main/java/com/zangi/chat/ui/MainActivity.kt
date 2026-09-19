@@ -15,12 +15,14 @@ import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.view.inputmethod.EditorInfo
 import android.widget.*
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -162,7 +164,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             binding.tvHubUserNumber.setOnClickListener {
-                copyToClipboard(it.zangiNumber, "Número Zangi copiado!")
+                copyToClipboard(user.zangiNumber, "Número Zangi copiado!")
             }
 
             binding.hubUserAvatarContainer.setOnClickListener {
@@ -325,7 +327,7 @@ class MainActivity : AppCompatActivity() {
         return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun requestPermission(permission: String, launcher: ActivityResultContracts.RequestPermission) {
+    private fun requestPermission(permission: String, launcher: ActivityResultLauncher<String>) {
         launcher.launch(permission)
     }
 
@@ -380,20 +382,309 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- DIÁLOGOS (MANTIDOS DA SUA IMPLEMENTAÇÃO) ---
-    // [Aqui você mantém os métodos showUserProfileDialog, showCustomAddContactDialog, 
-    // showCustomCreateGroupDialog, showJoinGroupDialog, showGroupInfoDialog, 
-    // createPendingMemberRow, createMemberRow, showImageViewerDialog, etc.]
-    // Para não estender o código excessivamente, mantenha a lógica que você já tinha.
-    // Eles funcionam perfeitamente.
+    // --- DIÁLOGOS DE INTERAÇÃO DO USUÁRIO ---
 
-    private fun showUserProfileDialog() { /* ... sua implementação ... */ }
-    private fun showCustomAddContactDialog() { /* ... sua implementação ... */ }
-    private fun showCustomCreateGroupDialog() { /* ... sua implementação ... */ }
-    private fun showJoinGroupDialog() { /* ... sua implementação ... */ }
-    private fun showGroupInfoDialog(conversation: Conversation) { /* ... sua implementação ... */ }
-    private fun showPromptAddMemberToGroup(groupId: String, onAdded: () -> Unit) { /* ... sua implementação ... */ }
-    private fun createPendingMemberRow(dialog: Dialog, conversation: Conversation, groupId: String, pending: GroupMember): View { return View(this) }
-    private fun createMemberRow(member: GroupMember, isOwner: Boolean): View { return View(this) }
-    private fun showImageViewerDialog(mediaSource: String) { /* ... sua implementação ... */ }
+    private fun showCustomAddContactDialog() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_add_contact)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val etNumber = dialog.findViewById<EditText>(R.id.etContactNumberInput)
+        val btnCancel = dialog.findViewById<Button>(R.id.btnCancelAddContact)
+        val btnConfirm = dialog.findViewById<Button>(R.id.btnConfirmAddContact)
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnConfirm.setOnClickListener {
+            val number = etNumber.text.toString().trim()
+            if (number.isNotEmpty()) {
+                viewModel.addContact(number)
+                Toast.makeText(this, "Contato adicionado!", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } else {
+                Toast.makeText(this, "Digite o número do contato.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun showCustomCreateGroupDialog() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_create_group)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val etGroupName = dialog.findViewById<EditText>(R.id.etGroupNameInput)
+        val btnCancel = dialog.findViewById<Button>(R.id.btnCancelCreateGroup)
+        val btnConfirm = dialog.findViewById<Button>(R.id.btnConfirmCreateGroup)
+        val btnOpenJoin = dialog.findViewById<Button>(R.id.btnOpenJoinGroup)
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnConfirm.setOnClickListener {
+            val name = etGroupName.text.toString().trim()
+            if (name.isNotEmpty()) {
+                viewModel.createGroup(name)
+                Toast.makeText(this, "Grupo \"$name\" criado com sucesso!", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } else {
+                Toast.makeText(this, "Digite o nome do grupo.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        btnOpenJoin.setOnClickListener {
+            dialog.dismiss()
+            showJoinGroupDialog()
+        }
+
+        dialog.show()
+    }
+
+    private fun showJoinGroupDialog() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_join_group)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val etJoinInput = dialog.findViewById<EditText>(R.id.etJoinGroupInput)
+        val btnCancel = dialog.findViewById<Button>(R.id.btnCancelJoinGroup)
+        val btnConfirm = dialog.findViewById<Button>(R.id.btnConfirmJoinGroup)
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnConfirm.setOnClickListener {
+            val input = etJoinInput.text.toString().trim()
+            if (input.isNotEmpty()) {
+                viewModel.requestJoinGroup(input)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(this, "Informe o código ou link do grupo.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun showUserProfileDialog() {
+        val user = viewModel.currentUser.value ?: return
+        val dialog = Dialog(this)
+        currentProfileDialog = dialog
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_user_profile)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val avatarContainer = dialog.findViewById<FrameLayout>(R.id.dialogAvatarContainer)
+        val ivPhoto = dialog.findViewById<ImageView>(R.id.ivDialogAvatarPhoto)
+        val tvInitials = dialog.findViewById<TextView>(R.id.tvDialogAvatarInitials)
+        val tvName = dialog.findViewById<TextView>(R.id.tvDialogProfileName)
+        val tvNumber = dialog.findViewById<TextView>(R.id.tvDialogProfileNumber)
+        val btnCopy = dialog.findViewById<LinearLayout>(R.id.btnCopyDialogNumber)
+        val btnClose = dialog.findViewById<Button>(R.id.btnDialogCloseProfile)
+
+        tvName.text = user.nickname
+        tvNumber.text = user.zangiNumber
+
+        val avatarSource = user.avatarLocalUri ?: user.avatarUrl
+        if (!avatarSource.isNullOrEmpty()) {
+            ivPhoto.visibility = View.VISIBLE
+            tvInitials.visibility = View.GONE
+            Glide.with(this).load(avatarSource).circleCrop().into(ivPhoto)
+        } else {
+            ivPhoto.visibility = View.GONE
+            tvInitials.visibility = View.VISIBLE
+            tvInitials.text = user.nickname.take(1).uppercase()
+        }
+
+        avatarContainer.setOnClickListener {
+            pickProfileImageLauncher.launch("image/*")
+        }
+
+        btnCopy.setOnClickListener {
+            copyToClipboard(user.zangiNumber, "Número Zangi copiado!")
+        }
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+
+        dialog.setOnDismissListener { currentProfileDialog = null }
+        dialog.show()
+    }
+
+    private fun showGroupInfoDialog(conversation: Conversation) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_group_info)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val tvName = dialog.findViewById<TextView>(R.id.tvGroupInfoName)
+        val tvNumber = dialog.findViewById<TextView>(R.id.tvGroupInfoNumber)
+        val tvOwner = dialog.findViewById<TextView>(R.id.tvGroupInfoOwner)
+        val btnCopyLink = dialog.findViewById<Button>(R.id.btnGroupCopyInviteLink)
+        val btnAddMember = dialog.findViewById<Button>(R.id.btnGroupAddMember)
+        val secPending = dialog.findViewById<LinearLayout>(R.id.sectionPendingRequests)
+        val containerPending = dialog.findViewById<LinearLayout>(R.id.containerPendingMembers)
+        val containerMembers = dialog.findViewById<LinearLayout>(R.id.containerGroupMembers)
+        val btnClose = dialog.findViewById<Button>(R.id.btnDialogCloseGroupInfo)
+
+        tvName.text = conversation.name
+        tvNumber.text = conversation.zangiNumber
+
+        lifecycleScope.launch {
+            val details = viewModel.getGroupDetails(conversation.id)
+            if (details != null) {
+                tvOwner.text = "👑 Dono: ${details.ownerName}"
+                btnCopyLink.setOnClickListener {
+                    copyToClipboard(details.inviteLink, "Link de convite copiado!")
+                }
+
+                if (details.isOwner && details.pendingMembers.isNotEmpty()) {
+                    secPending.visibility = View.VISIBLE
+                    containerPending.removeAllViews()
+                    details.pendingMembers.forEach { pending ->
+                        containerPending.addView(createPendingMemberRow(dialog, conversation, details.id, pending))
+                    }
+                } else {
+                    secPending.visibility = View.GONE
+                }
+
+                containerMembers.removeAllViews()
+                details.members.forEach { member ->
+                    containerMembers.addView(createMemberRow(member, member.id == details.creatorId))
+                }
+            } else {
+                tvOwner.text = "Grupo Criptografado"
+                btnCopyLink.setOnClickListener {
+                    copyToClipboard(conversation.zangiNumber, "Número do grupo copiado!")
+                }
+            }
+        }
+
+        btnAddMember.setOnClickListener {
+            showPromptAddMemberToGroup(conversation.id) {
+                dialog.dismiss()
+            }
+        }
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
+    private fun showPromptAddMemberToGroup(groupId: String, onAdded: () -> Unit) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_add_contact)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+
+        val etInput = dialog.findViewById<EditText>(R.id.etContactNumberInput)
+        val btnCancel = dialog.findViewById<Button>(R.id.btnCancelAddContact)
+        val btnConfirm = dialog.findViewById<Button>(R.id.btnConfirmAddContact)
+
+        btnConfirm.text = "Adicionar ao Grupo"
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+        btnConfirm.setOnClickListener {
+            val number = etInput.text.toString().trim()
+            if (number.isNotEmpty()) {
+                viewModel.addMemberToGroup(groupId, number)
+                dialog.dismiss()
+                onAdded()
+            }
+        }
+        dialog.show()
+    }
+
+    private fun createPendingMemberRow(dialog: Dialog, conversation: Conversation, groupId: String, pending: GroupMember): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 8, 0, 8)
+        }
+
+        val tvInfo = TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            text = "${pending.nickname} (${pending.zangiNumber})"
+            setTextColor(Color.WHITE)
+            textSize = 13f
+        }
+
+        val btnApprove = Button(this).apply {
+            text = "✓"
+            setTextColor(Color.GREEN)
+            setBackgroundColor(Color.TRANSPARENT)
+            setOnClickListener {
+                viewModel.approveGroupMember(groupId, pending.id, true) {
+                    showGroupInfoDialog(conversation)
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        val btnReject = Button(this).apply {
+            text = "✗"
+            setTextColor(Color.RED)
+            setBackgroundColor(Color.TRANSPARENT)
+            setOnClickListener {
+                viewModel.approveGroupMember(groupId, pending.id, false) {
+                    showGroupInfoDialog(conversation)
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        row.addView(tvInfo)
+        row.addView(btnApprove)
+        row.addView(btnReject)
+        return row
+    }
+
+    private fun createMemberRow(member: GroupMember, isOwner: Boolean): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 8, 0, 8)
+        }
+
+        val tv = TextView(this).apply {
+            text = if (isOwner) "👑 ${member.nickname} (${member.zangiNumber})" else "• ${member.nickname} (${member.zangiNumber})"
+            setTextColor(if (isOwner) ContextCompat.getColor(context, R.color.zangi_green_primary) else Color.WHITE)
+            textSize = 13f
+        }
+        row.addView(tv)
+        return row
+    }
+
+    private fun showImageViewerDialog(mediaSource: String) {
+        val dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        dialog.setContentView(R.layout.dialog_image_viewer)
+
+        val ivFull = dialog.findViewById<ImageView>(R.id.ivFullImage)
+        val btnClose = dialog.findViewById<ImageButton>(R.id.btnCloseImageViewer)
+
+        Glide.with(this).load(mediaSource).into(ivFull)
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
 }

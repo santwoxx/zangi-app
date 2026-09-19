@@ -182,7 +182,244 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   res.status(200).json({ success: true, data: newMsg });
 });
 
-// ... (Mantenha as outras rotas de mensagens, grupos e contatos que você já tinha)
+// ============================================================
+// ROTAS DE CONTATOS, GRUPOS E MENSAGENS
+// ============================================================
+
+// 4. Adicionar Contato
+app.post('/api/contacts/add', (req, res) => {
+  const { userId, contactZangiNumber } = req.body;
+  if (!userId || !contactZangiNumber) {
+    return res.status(400).json({ success: false, message: 'Dados incompletos.' });
+  }
+
+  let target = users.find(u => u.zangiNumber === contactZangiNumber);
+  if (!target) {
+    target = {
+      id: `user_contact_${Date.now()}`,
+      nickname: `Contato (${contactZangiNumber})`,
+      zangiNumber: contactZangiNumber,
+      createdAt: new Date().toISOString()
+    };
+    users.push(target);
+  }
+
+  if (!contacts[userId]) contacts[userId] = [];
+  if (!contacts[userId].some(c => c.id === target.id)) {
+    contacts[userId].push(target);
+  }
+
+  console.log(`👤 [CONTATO ADICIONADO] ${target.nickname} para o usuário ${userId}`);
+  res.json({ success: true, message: `Contato ${target.nickname} adicionado com sucesso!`, contact: target });
+});
+
+// 5. Criar Grupo
+app.post('/api/groups/create', (req, res) => {
+  const { name, creatorId, memberIds } = req.body;
+  if (!name || !creatorId) {
+    return res.status(400).json({ success: false, message: 'Nome do grupo e criador são obrigatórios.' });
+  }
+
+  const creator = users.find(u => u.id === creatorId) || { id: creatorId, nickname: 'Você', zangiNumber: '10-000-0000' };
+  const part2 = Math.floor(1000 + Math.random() * 9000);
+  const zangiNumber = `10-GRP-${part2}`;
+
+  const allMembers = [creator];
+  if (Array.isArray(memberIds)) {
+    memberIds.forEach(mId => {
+      const found = users.find(u => u.id === mId);
+      if (found && !allMembers.some(m => m.id === found.id)) {
+        allMembers.push(found);
+      }
+    });
+  }
+
+  const newGroup = {
+    id: `grp_${Date.now()}`,
+    name: name.trim(),
+    zangiNumber: zangiNumber,
+    creatorId: creator.id,
+    ownerName: creator.nickname,
+    inviteLink: `https://zangi-app.onrender.com/invite/${zangiNumber}`,
+    members: allMembers,
+    pendingMembers: [],
+    createdAt: new Date().toISOString()
+  };
+
+  groups.push(newGroup);
+
+  console.log(`🛡️ [NOVO GRUPO] ${newGroup.name} (${newGroup.zangiNumber}) criado por ${creator.nickname}`);
+  res.status(201).json({
+    success: true,
+    message: `Grupo "${newGroup.name}" criado com sucesso!`,
+    group: newGroup
+  });
+});
+
+// 6. Listar Conversas do Usuário
+app.get('/api/conversations/:userId', (req, res) => {
+  const { userId } = req.params;
+  const userConversations = [];
+
+  // Grupos que o usuário faz parte
+  groups.filter(g => g.members.some(m => m.id === userId)).forEach(g => {
+    const lastMsg = messages.filter(m => m.conversationId === g.id).slice(-1)[0];
+    userConversations.push({
+      id: g.id,
+      name: g.name,
+      zangiNumber: g.zangiNumber,
+      avatarUrl: null,
+      isGroup: true,
+      memberCount: g.members.length,
+      lastMessage: lastMsg ? `${lastMsg.senderName}: ${lastMsg.text || 'Arquivo'}` : 'Grupo criado',
+      lastMessageTime: lastMsg ? lastMsg.timestamp : '',
+      unreadCount: 0
+    });
+  });
+
+  // Contatos adicionados
+  const userContacts = contacts[userId] || [];
+  userContacts.forEach(c => {
+    const convId = [userId, c.id].sort().join('_');
+    const lastMsg = messages.filter(m => m.conversationId === convId).slice(-1)[0];
+    userConversations.push({
+      id: convId,
+      name: c.nickname,
+      zangiNumber: c.zangiNumber,
+      avatarUrl: c.avatarUrl || null,
+      isGroup: false,
+      memberCount: 2,
+      lastMessage: lastMsg ? (lastMsg.text || 'Arquivo') : 'Conversa criptografada',
+      lastMessageTime: lastMsg ? lastMsg.timestamp : '',
+      unreadCount: 0
+    });
+  });
+
+  res.json({ success: true, conversations: userConversations });
+});
+
+// 7. Detalhes do Grupo
+app.get('/api/groups/:groupId/details', (req, res) => {
+  const { groupId } = req.params;
+  const { userId } = req.query;
+  const group = groups.find(g => g.id === groupId || g.zangiNumber === groupId);
+  if (!group) return res.status(404).json({ success: false, message: 'Grupo não encontrado.' });
+
+  res.json({
+    success: true,
+    group: {
+      id: group.id,
+      name: group.name,
+      zangiNumber: group.zangiNumber,
+      creatorId: group.creatorId,
+      ownerName: group.ownerName,
+      isOwner: group.creatorId === userId,
+      inviteLink: group.inviteLink,
+      membersCount: group.members.length,
+      members: group.members,
+      pendingMembers: group.creatorId === userId ? group.pendingMembers : []
+    }
+  });
+});
+
+// 8. Adicionar Membro ao Grupo
+app.post('/api/groups/:groupId/members/add', (req, res) => {
+  const { groupId } = req.params;
+  const { requesterId, userZangiNumber } = req.body;
+  const group = groups.find(g => g.id === groupId);
+  if (!group) return res.status(404).json({ success: false, message: 'Grupo não encontrado.' });
+
+  let target = users.find(u => u.zangiNumber === userZangiNumber);
+  if (!target) {
+    target = {
+      id: `user_${Date.now()}`,
+      nickname: `Membro (${userZangiNumber})`,
+      zangiNumber: userZangiNumber
+    };
+    users.push(target);
+  }
+
+  if (!group.members.some(m => m.id === target.id)) {
+    group.members.push(target);
+  }
+
+  res.json({ success: true, message: `${target.nickname} adicionado ao grupo!` });
+});
+
+// 9. Solicitar Entrada em Grupo
+app.post('/api/groups/:groupId/join-request', (req, res) => {
+  const { groupId } = req.params;
+  const { userId } = req.body;
+  const group = groups.find(g => g.id === groupId || g.zangiNumber === groupId || (g.inviteLink && g.inviteLink.includes(groupId)));
+  if (!group) return res.status(404).json({ success: false, message: 'Grupo não encontrado.' });
+
+  let user = users.find(u => u.id === userId);
+  if (!user) {
+    user = { id: userId, nickname: 'Usuário', zangiNumber: '10-000-0000' };
+  }
+
+  if (group.members.some(m => m.id === user.id)) {
+    return res.json({ success: true, message: 'Você já é membro deste grupo!' });
+  }
+
+  if (!group.pendingMembers.some(m => m.id === user.id)) {
+    group.pendingMembers.push(user);
+  }
+
+  res.json({ success: true, message: 'Solicitação enviada ao administrador do grupo!' });
+});
+
+// 10. Aprovar/Rejeitar Membro
+app.post('/api/groups/:groupId/approve', (req, res) => {
+  const { groupId } = req.params;
+  const { candidateUserId, approve } = req.body;
+  const group = groups.find(g => g.id === groupId);
+  if (!group) return res.status(404).json({ success: false, message: 'Grupo não encontrado.' });
+
+  group.pendingMembers = group.pendingMembers.filter(m => m.id !== candidateUserId);
+
+  if (approve) {
+    let candidate = users.find(u => u.id === candidateUserId);
+    if (!candidate) {
+      candidate = { id: candidateUserId, nickname: 'Novo Membro', zangiNumber: '10-000-0000' };
+    }
+    if (!group.members.some(m => m.id === candidate.id)) {
+      group.members.push(candidate);
+    }
+  }
+
+  res.json({ success: true, message: approve ? 'Membro aprovado!' : 'Solicitação recusada.' });
+});
+
+// 11. Listar Mensagens de Conversa
+app.get('/api/messages/:conversationId', (req, res) => {
+  const { conversationId } = req.params;
+  const list = messages.filter(m => m.conversationId === conversationId);
+  res.json({ success: true, messages: list });
+});
+
+// 12. Enviar Mensagem de Texto
+app.post('/api/message', (req, res) => {
+  const { conversationId, senderId, senderName, senderZangiNumber, text } = req.body;
+  if (!conversationId || !senderId || !text) {
+    return res.status(400).json({ success: false, message: 'Dados incompletos.' });
+  }
+
+  const newMsg = {
+    id: `msg_${Date.now()}`,
+    conversationId,
+    senderId,
+    senderName,
+    senderZangiNumber,
+    text,
+    type: 'TEXT',
+    file: null,
+    timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  };
+
+  messages.push(newMsg);
+  res.json({ success: true, message: 'Mensagem enviada!', data: newMsg });
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'healthy', usersCount: users.length });

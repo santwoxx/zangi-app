@@ -8,10 +8,9 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // Endereço padrão apontando para o IP do seu computador na rede local (Wi-Fi/Ethernet)
+    // Endereço oficial em produção no Render: https://zangi-app.onrender.com/
     // Para testar em emulador: http://10.0.2.2:3000/
-    // Para produção no Render: https://seu-backend.onrender.com/
-    private var currentBaseUrl: String = "http://192.168.18.74:3000/"
+    private var currentBaseUrl: String = "https://zangi-app.onrender.com/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -19,9 +18,9 @@ object RetrofitClient {
 
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
             .build()
     }

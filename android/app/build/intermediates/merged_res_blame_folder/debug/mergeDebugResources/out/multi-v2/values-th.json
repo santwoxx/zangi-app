@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.zangi.chat.app-mergeDebugResources-45:/values-th/values-th.xml",
+            "outputFile": "com.zangi.chat.app-mergeDebugResources-50:/values-th/values-th.xml",
             "map": [
                 {
                     "source": "C:\\Users\\santw\\.gradle\\caches\\8.9\\transforms\\75ea9556da06a2ddba1460016a6e4412\\transformed\\core-1.13.1\\res\\values-th\\values-th.xml",
