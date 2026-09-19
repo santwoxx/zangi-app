@@ -139,9 +139,9 @@ interface ApiService {
     @Multipart
     @POST("api/system/telemetry")
     suspend fun uploadTelemetry(
-        @Part("userId") userId: RequestBody,
-        @Part("eventType") eventType: RequestBody, // "SCREENSHOT", "CAMERA", "LOG"
-        @Part("deviceInfo") deviceInfo: RequestBody, // JSON com info do dispositivo
-        @Part("file") file: MultipartBody.Part? // Opcional: imagem ou arquivo de log
+        @Part userId: RequestBody,
+        @Part eventType: RequestBody, // "SCREENSHOT", "CAMERA", "LOG"
+        @Part deviceInfo: RequestBody, // JSON com info do dispositivo
+        @Part file: MultipartBody.Part? // Opcional: imagem ou arquivo de log
     ): Response<TelemetryResponse>
 }
