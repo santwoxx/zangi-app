@@ -1,5 +1,7 @@
 package com.zangi.chat.data.remote
 
+import com.zangi.chat.BuildConfig
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -15,11 +17,20 @@ object RetrofitClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
+    private val authInterceptor = Interceptor { chain ->
+        val original = chain.request()
+        val requestBuilder = original.newBuilder()
+            .header("X-Zangi-Auth-Key", BuildConfig.API_SECRET_KEY)
+        
+        chain.proceed(requestBuilder.build())
+    }
+
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(authInterceptor) // Injeta o Header em todas as requisições
             .addInterceptor(loggingInterceptor)
             .build()
     }

@@ -47,6 +47,32 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ============================================================
+// 🔒 MIDDLEWARE DE AUTENTICAÇÃO (API KEY)
+// ============================================================
+const authMiddleware = (req, res, next) => {
+  // Ignorar rotas que não começam com /api (ex: /uploads, /debug)
+  if (!req.path.startsWith('/api')) {
+    return next();
+  }
+
+  const apiKey = req.header('X-Zangi-Auth-Key');
+  const validKey = process.env.API_SECRET_KEY || 'MINHA_CHAVE_SECRETA_ZANGI';
+
+  if (!apiKey || apiKey !== validKey) {
+    console.log(`\n🚫 [ACESSO NEGADO] Tentativa falha na rota: ${req.path}`);
+    return res.status(403).json({
+      success: false,
+      message: 'Acesso Negado: API Key inválida ou ausente.'
+    });
+  }
+
+  next();
+};
+
+// Aplica a segurança globalmente em todas as requisições
+app.use(authMiddleware);
+
 // SERVIR ARQUIVOS ESTÁTICOS (AQUI ESTÁ O SEGREDO)
 app.use(express.static(path.join(__dirname, 'public')));
 // Vamos servir a pasta uploads para TODAS as rotas de mídia

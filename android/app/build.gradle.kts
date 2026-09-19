@@ -1,7 +1,18 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+// Pegamos a chave do local.properties, com um fallback de segurança vazio se não existir
+val apiSecretKey: String = localProperties.getProperty("API_SECRET_KEY") ?: "\"\""
 
 android {
     namespace = "com.zangi.chat"
@@ -15,6 +26,9 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Injeta a API Key no BuildConfig gerado
+        buildConfigField("String", "API_SECRET_KEY", apiSecretKey)
     }
 
     buildTypes {
@@ -37,6 +51,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true // Habilita a geração da classe BuildConfig
     }
 }
 
